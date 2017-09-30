@@ -7,9 +7,6 @@ body {
     }
 }
 
-div#divMainContainer { padding: 25px; }
 h4 { padding: 20px 0; }
 
-div.navbar-nav > li > a.nav-link {
-    color: #fff;
-}
+.top-space { margin-top: 30px; }

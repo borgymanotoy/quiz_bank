@@ -95,3 +95,7 @@ span.status {
     pointer-events: none;
     opacity: 0.4;
 }
+
+input[type='radio'], input[type='checkbox'] {
+    margin-right: 10px;
+}

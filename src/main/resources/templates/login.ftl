@@ -5,24 +5,12 @@
 <html>
     <head>
         <@t.headerMetaTags />
-        <title>Quiz Bank: Login</title>
+        <title>Capstone: Login</title>
 
         <!-- Bootstrap core CSS -->
         <link href="css/bootstrap.min.css" rel="stylesheet">
-
-        <style type="text/css">
-            body {
-                padding-top: 54px;
-            }
-            @media (min-width: 992px) {
-                body {
-                    padding-top: 56px;
-                }
-            }
-
-            .label {text-align: right}
-            .error {color: red}
-        </style>
+        <link rel="stylesheet" href="css/font-awesome.min.css">
+        <link rel="stylesheet" href="css/login.css">
   </head>
 
     <body>

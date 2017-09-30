@@ -1,9 +1,11 @@
 package com.borgymanotoy.samples.controller;
 
 
+import com.google.gson.Gson;
 import com.mongodb.*;
 import com.mongodb.client.MongoDatabase;
 import com.borgymanotoy.samples.dao.*;
+import com.borgymanotoy.samples.model.User;
 import com.borgymanotoy.samples.util.FreeMarkerTemplateEngine;
 import com.borgymanotoy.samples.util.ResourceUtilities;
 import org.apache.commons.lang3.StringEscapeUtils;
@@ -17,8 +19,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static com.borgymanotoy.samples.util.JsonUtil.json;
 import static spark.Spark.get;
 import static spark.Spark.post;
+import static spark.Spark.put;
 
 
 public class ProjectController implements Mapper{
@@ -29,6 +33,7 @@ public class ProjectController implements Mapper{
     private final TopicQuizDAO topicQuizDAO;
     private final UserDAO userDAO;
     private final SessionDAO sessionDAO;
+    private final VideoDAO videoDAO;
 
     private final static String NOT_AVAILABLE = "N/A";
     private final static String BLANK_VALUE = "";
@@ -43,6 +48,7 @@ public class ProjectController implements Mapper{
         topicQuizDAO = new TopicQuizDAO(projectDatabase);
         userDAO = new UserDAO(projectDatabase);
         sessionDAO = new SessionDAO(projectDatabase);
+        videoDAO = new VideoDAO(projectDatabase);
 
         setupEndPoints();
     }
@@ -53,7 +59,7 @@ public class ProjectController implements Mapper{
         get("/", (request, response) -> {
             Map<String, Object> attributes = new HashMap<>();
 
-            Document user;
+            Document user = null;
             String sessionId = ResourceUtilities.getSessionCookie(request);
             String username = sessionDAO.findUserNameBySessionId(sessionId);
             attributes.put("sessionId", sessionId);
@@ -78,11 +84,16 @@ public class ProjectController implements Mapper{
                     List<Document> lstUserClasses = new ArrayList<>();
                     ArrayList<Document> userClassCodes =  (ArrayList) user.get("classes");
                     if(null!=userClassCodes){
+                        //System.out.println("has classes data");
                         for(Object o : userClassCodes){
                             String classCode = o.toString();
+                            //System.out.println("[Class]: " + classCode);
                             classes.add(classCode);
                             lstUserClasses.add(courseDAO.findById(classCode));
                         }
+                    }
+                    else {
+                        System.out.println("there are no class data");
                     }
 
                     attributes.put("userClasses", lstUserClasses);
@@ -98,13 +109,27 @@ public class ProjectController implements Mapper{
                         if(null!=topics){
                             for(Document docTopics : topics){
                                 String id = docTopics.getString("_id");
-                                if(studentTakenTopicQuiz(listTopicQuiz, id)){
+                                Document topicQuiz = getStudentTakenTopicQuiz(listTopicQuiz, id);
+                                if(null!=topicQuiz){
+                                    ArrayList<Document> questions =  (ArrayList) topicQuiz.get("questions");
+                                    int items = null!=questions ? questions.size() : 0;
+                                    double scores = (double) topicQuiz.getInteger("topicScore");
+                                    double percentage = 100 * (scores/items);
+
+                                    System.out.println("[items]: " + items);
+                                    System.out.println("[scores]: " + scores);
+                                    System.out.println("[percentage]: " + percentage);
+
                                     docTopics.append("taken", true);
+                                    docTopics.append("items", items);
+                                    docTopics.append("scores", scores);
+                                    docTopics.append("percentage", percentage);
                                 }
                             }
                         }
 
                         attributes.put("topics", topics);
+                        //attributes.put("topics", displayableTopics);
                     }
                 }
             }
@@ -112,6 +137,112 @@ public class ProjectController implements Mapper{
             return new ModelAndView(attributes, "home.ftl");
         }, new FreeMarkerTemplateEngine());
 
+        get("/profile", (request, response) -> {
+            Map<String, Object> attributes = new HashMap<>();
+
+            Document user = null;
+            String sessionId = ResourceUtilities.getSessionCookie(request);
+            String username = sessionDAO.findUserNameBySessionId(sessionId);
+            attributes.put("sessionId", sessionId);
+            attributes.put("showSignUp", false);
+
+            String statusMsg = ResourceUtilities.getFlashMessage(request, "status_msg");
+
+            if(null!=statusMsg && !"".equals(statusMsg))
+                attributes.put("statusMsg", statusMsg);
+
+            if (null == username) {
+                System.out.println("welcome() can't identify the user, redirecting to signup");
+                response.redirect("/signup");
+            }
+            else {
+                attributes.put("username", username);
+                user = userDAO.getUserInfo(username);
+                if(null!=user){
+                    String displayName = user.getString("firstName") + " " + user.getString("lastName");
+                    attributes.put("hdrLink", "");
+                    attributes.put("hdrLabel", "Welcome " + displayName);
+                    attributes.put("userType", user.getString("userType"));
+                    attributes.put("displayName", displayName);
+                    attributes.put("firstName", user.getString("firstName"));
+                    attributes.put("lastName", user.getString("lastName"));
+                    attributes.put("username", user.getString("_id"));
+                    attributes.put("email", user.getString("email"));
+
+                    String type = "N/A";
+                    if(null!=user.getString("userType")){
+                        if("T".equalsIgnoreCase(user.getString("userType")))
+                            type = "Teacher";
+                        else if("S".equalsIgnoreCase(user.getString("userType")))
+                            type = "Student";
+                    }
+                    attributes.put("type", type);
+                    attributes.put("isActive", user.getBoolean("isActive"));
+                }
+            }
+
+            return new ModelAndView(attributes, "profile.ftl");
+        }, new FreeMarkerTemplateEngine());
+
+        post("/profile", (request, response) -> {
+            Map<String, Object> attributes = new HashMap<>();
+
+            String sessionId = ResourceUtilities.getSessionCookie(request);
+            String username = sessionDAO.findUserNameBySessionId(sessionId);
+            attributes.put("sessionId", sessionId);
+
+            if(null!=username){
+                attributes.put("username", username);
+                Document user = userDAO.getUserInfo(username);
+                if(null!=user) {
+                    String email = request.queryParams("email");
+                    String firstName = request.queryParams("firstName");
+                    String lastName = request.queryParams("lastName");
+                    String userType = user.getString("userType");
+                    String pActive = request.queryParams("isActive");
+                    boolean isActive = null!=pActive && "active".equalsIgnoreCase(pActive) ? true : false;
+
+                    attributes.put("username", StringEscapeUtils.escapeHtml4(username));
+                    attributes.put("email", StringEscapeUtils.escapeHtml4(email));
+                    attributes.put("firstName", firstName);
+                    attributes.put("lastName", lastName);
+                    attributes.put("isActive", isActive);
+
+                    String displayName = firstName + " " + lastName;
+                    attributes.put("hdrLink", "");
+                    attributes.put("hdrLabel", "Welcome " + displayName);
+                    attributes.put("userType", userType);
+                    attributes.put("displayName", displayName);
+
+                    String type = "N/A";
+                    if(null!=userType){
+                        if("T".equalsIgnoreCase(userType))
+                            type = "Teacher";
+                        else if("S".equalsIgnoreCase(userType))
+                            type = "Student";
+                    }
+                    attributes.put("type", type);
+
+                    if (ResourceUtilities.validateProfileUpdate(firstName, lastName, email, attributes)) {
+                        if (!userDAO.updateUserProfile(username, firstName, lastName, email, isActive)) {
+                            attributes.put("update_error", "Unable to update profile!");
+                        }
+                        else {
+                            attributes.put("update_success", "Successfully updated profile!");
+                        }
+                    }
+                    else {
+                        attributes.put("update_error", "User profile update did not validate!");
+                    }
+                }
+            }
+            else {
+                System.out.println("welcome() can't identify the user, redirecting to signup");
+                response.redirect("/signup");
+            }
+
+            return new ModelAndView(attributes, "profile.ftl");
+        }, new FreeMarkerTemplateEngine());
 
         get("signup", (request, response) -> {
             Map<String, Object> attributes = new HashMap<>();
@@ -133,37 +264,45 @@ public class ProjectController implements Mapper{
             return new ModelAndView(attributes, "signup.ftl");
         }, new FreeMarkerTemplateEngine());
 
-        // handle the signup post
-        post("/signup", (request, response) -> {
+
+        post("/registerUser", (request, response) -> {
             Map<String, Object> attributes = new HashMap<>();
-            attributes.put("message", "Hello World!");
+
+            boolean success = false;
 
             String email = request.queryParams("email");
             String username = request.queryParams("username");
             String password = request.queryParams("password");
             String firstName = request.queryParams("firstName");
             String lastName = request.queryParams("lastName");
-            String verify = request.queryParams("verify");
             String userType = request.queryParams("userType");
 
-            attributes.put("username", StringEscapeUtils.escapeHtml4(username));
-            attributes.put("email", StringEscapeUtils.escapeHtml4(email));
+            attributes.put("username", username);
+            attributes.put("password", password);
+            attributes.put("firstName", firstName);
+            attributes.put("lastName", lastName);
+            attributes.put("email", email);
+            attributes.put("userType", userType);
 
-            if (ResourceUtilities.validateSignup(username, password, verify, firstName, lastName, email, userType, attributes)) {
-                // good user
-                if (!userDAO.addUser(username, password, firstName, lastName, email, userType)) {
-                    attributes.put("signup_error", "Username already in use, Please choose another");
-                }
-                else {
-                    String sessionID = sessionDAO.startSession(username);
-                    response.raw().addCookie(new Cookie("session", sessionID));
-                    response.redirect("/welcome");
-                }
+            User user = new User();
+            user.set_id(username);
+            user.setFirstName(firstName);
+            user.setLastName(lastName);
+            user.setPassword(password);
+            user.setEmail(email);
+            user.setUserType(userType);
+            user.setActive(true);
+
+            if(null!=user && user.validateUser())
+                success = this.userDAO.addUser(user);
+
+            if(success) {
+                String sessionID = sessionDAO.startSession(user.get_id());
+                response.raw().addCookie(new Cookie("session", sessionID));
+                response.redirect("/welcome");
             }
-            else {
-                // bad signup
-                attributes.put("signup_error", "User Registration did not validate");
-            }
+            else
+                attributes.put("signup_error", "Unable to register user!");
 
             return new ModelAndView(attributes, "signup.ftl");
         }, new FreeMarkerTemplateEngine());
@@ -178,6 +317,7 @@ public class ProjectController implements Mapper{
 
             attributes.put("showSignUp", true);
             attributes.put("username", "");
+//            attributes.put("login_error", "");
             return new ModelAndView(attributes, "login.ftl");
         }, new FreeMarkerTemplateEngine());
 
@@ -187,11 +327,14 @@ public class ProjectController implements Mapper{
             String username = request.queryParams("username");
             String password = request.queryParams("password");
 
+            System.out.println("Login: User submitted: " + username + "  " + password);
+
             Document user = userDAO.validateLogin(username, password);
 
             if (user != null) {
                 // valid user, let's log them in
                 String sessionID = sessionDAO.startSession(user.get("_id").toString());
+
                 if (sessionID == null) {
                     response.redirect("/internal_error");
                 }
@@ -213,6 +356,7 @@ public class ProjectController implements Mapper{
 
             return new ModelAndView(attributes, "login.ftl");
         }, new FreeMarkerTemplateEngine());
+
 
         get("logout", (request, response) -> {
             Map<String, Object> attributes = new HashMap<>();
@@ -236,6 +380,7 @@ public class ProjectController implements Mapper{
 
             return new ModelAndView(attributes, "signup.ftl");
         }, new FreeMarkerTemplateEngine());
+
 
         get("welcome", (request, response) -> {
             Map<String, Object> attributes = new HashMap<>();
@@ -261,11 +406,16 @@ public class ProjectController implements Mapper{
                     List<Document> lstUserClasses = new ArrayList<>();
                     ArrayList<Document> userClassCodes =  (ArrayList) user.get("classes");
                     if(null!=userClassCodes){
+                        //System.out.println("has classes data");
                         for(Object o : userClassCodes){
                             String classCode = o.toString();
+                            //System.out.println("[Class]: " + classCode);
                             classes.add(classCode);
                             lstUserClasses.add(courseDAO.findById(classCode));
                         }
+                    }
+                    else {
+                        System.out.println("there are no class data");
                     }
 
                     attributes.put("userClasses", lstUserClasses);
@@ -283,15 +433,24 @@ public class ProjectController implements Mapper{
                         if(null!=topics){
                             for(Document docTopics : topics){
                                 String id = docTopics.getString("_id");
-                                if(studentTakenTopicQuiz(listTopicQuiz, id)){
-                                    System.out.println("[taken]: " + id);
+                                Document topicQuiz = getStudentTakenTopicQuiz(listTopicQuiz, id);
+                                if(null!=topicQuiz){
+                                    ArrayList<Document> questions =  (ArrayList) topicQuiz.get("questions");
+                                    int items = null!=questions ? questions.size() : 0;
+                                    double scores = (double) topicQuiz.getInteger("topicScore");
+                                    double percentage = 100 * (scores/items);
                                     docTopics.append("taken", true);
+                                    docTopics.append("items", items);
+                                    docTopics.append("scores", scores);
+                                    docTopics.append("percentage", percentage);
                                 }
                             }
                         }
+
                         attributes.put("topics", topics);
                     }
                 }
+
             }
             return new ModelAndView(attributes, "welcome.ftl");
         }, new FreeMarkerTemplateEngine());
@@ -358,6 +517,7 @@ public class ProjectController implements Mapper{
             return new ModelAndView(attributes, "course_template.ftl");
         }, new FreeMarkerTemplateEngine());
 
+
         // will present the form used to process get and display class using class code
         get("course", (request, response) -> {
             Map<String, Object> attributes = new HashMap<>();
@@ -393,33 +553,41 @@ public class ProjectController implements Mapper{
                     if(null!=forApproval && 0 < forApproval.size()) attributes.put("forApproval", forApproval);
 
                     int topicsCount = topicDAO.getCourseTopicsCount(classCode);
+                    //System.out.println("\n[topicsCount]: " + topicsCount);
 
                     List<Document> listTopicQuiz = topicQuizDAO.findByCourseCodeDateDescending(classCode);
                     List<Document> classList = userDAO.getClassStudents(classCode);
                     if(null!=classList && 0 < classList.size()){
                         for(Document s : classList){
                             String student = s.getString("_id");
+                            //System.out.println("\n[student]: " + student);
 
                             double totalScore = 0.0;
                             for(Document tq : listTopicQuiz){
                                 if(tq.getString("student").equalsIgnoreCase(student)){
+                                    //System.out.println("[topic-id]: " + tq.getString("topicId"));
                                     double score = tq.getInteger("topicScore");
                                     double itemCount = 0.0;
+                                    //System.out.println("[score]: " + score);
                                     if(null!=tq.get("questions")){
                                         ArrayList<Document> questions =  (ArrayList) tq.get("questions");
                                         itemCount = questions.size();
                                     }
 
                                     double topicAverage = score/itemCount * 100;
+                                    //System.out.println("[topicAverage]: " + topicAverage);
                                     totalScore+=topicAverage;
                                 }
                             }
 
                             double totalAverage = totalScore/topicsCount;
                             s.append("totalScore", totalScore).append("totalAverage", totalAverage);
+                            //System.out.println("[totalScore]: " + totalScore);
+                            //System.out.println("[totalAverage]: " + totalAverage);
                         }
                         attributes.put("classList", classList);
                     }
+
                 }
                 else {
                     attributes.put("errors", "Class not found!");
@@ -430,6 +598,78 @@ public class ProjectController implements Mapper{
 
             return new ModelAndView(attributes, "course_template.ftl");
         }, new FreeMarkerTemplateEngine());
+
+
+        get("/classList", (request, response) -> {
+            Map<String, Object> attributes = new HashMap<>();
+
+            Document user = null;
+            String sessionId = ResourceUtilities.getSessionCookie(request);
+            String username = sessionDAO.findUserNameBySessionId(sessionId);
+            attributes.put("sessionId", sessionId);
+            attributes.put("showSignUp", true);
+
+            String statusMsg = ResourceUtilities.getFlashMessage(request, "status_msg");
+
+            if(null!=statusMsg && !"".equals(statusMsg))
+                attributes.put("statusMsg", statusMsg);
+
+            if(null!=username) {
+                attributes.put("username", username);
+                user = userDAO.getUserInfo(username);
+                if (null != user) {
+                    String displayName = user.getString("firstName") + " " + user.getString("lastName");
+                    attributes.put("hdrLink", "");
+                    attributes.put("hdrLabel", "Welcome " + displayName);
+                    attributes.put("userType", user.getString("userType"));
+                    attributes.put("displayName", displayName);
+
+                    String classCode = request.queryParams("c");
+                    System.out.println("[course-code]: " + classCode);
+
+                    if(null!=classCode) {
+                        Document docClass = courseDAO.findById(classCode);
+                        if (null != docClass) {
+                            String className = docClass.getString("className");
+                            String classDescription = docClass.getString("classDescription");
+
+                            attributes.put("classCode", classCode);
+                            attributes.put("className", className);
+                            attributes.put("classDescription", classDescription);
+
+                            List<Document> classList = this.userDAO.getClassStudents(classCode);
+                            List<Document> listTopicQuiz = topicQuizDAO.findByCourseCodeDateDescending(classCode);
+                            if(null!=classList && 0 < classList.size()){
+                                int topicsCount = topicDAO.getCourseTopicsCount(classCode);
+                                for(Document docStudent : classList){
+                                    String student = docStudent.getString("_id");
+                                    double totalScore = 0.0;
+                                    for(Document tq : listTopicQuiz){
+                                        if(tq.getString("student").equalsIgnoreCase(student)){
+                                            double score = tq.getInteger("topicScore");
+                                            double itemCount = 0.0;
+                                            if(null!=tq.get("questions")){
+                                                ArrayList<Document> questions =  (ArrayList) tq.get("questions");
+                                                itemCount = questions.size();
+                                            }
+                                            double topicAverage = 100 * (score/itemCount);
+                                            totalScore+=topicAverage;
+                                        }
+                                    }
+                                    double totalAverage = totalScore/topicsCount;
+                                    docStudent.append("totalScore", totalScore).append("totalAverage", totalAverage);
+                                }
+                                attributes.put("classList", classList);
+                            }
+                        }
+                    }
+                }
+            }
+
+
+            return new ModelAndView(attributes, "class_list.ftl");
+        }, new FreeMarkerTemplateEngine());
+
 
         get("classSearch", (request, response) -> {
             Map<String, Object> attributes = new HashMap<>();
@@ -460,7 +700,48 @@ public class ProjectController implements Mapper{
             return new ModelAndView(attributes, "search_class.ftl");
         }, new FreeMarkerTemplateEngine());
 
-        post("classSearch",(request, response) -> {
+        get("/studentSearchPage", (request, response) -> {
+            Map<String, Object> attributes = new HashMap<>();
+
+            String classCode = request.queryParams("c");
+            System.out.println("[classCode]: " + classCode);
+
+            Document user = null;
+            String sessionId = ResourceUtilities.getSessionCookie(request);
+            String username = sessionDAO.findUserNameBySessionId(sessionId);
+            attributes.put("sessionId", sessionId);
+            attributes.put("username", username);
+            attributes.put("classCode", classCode);
+
+            if(null!=username){
+                user = userDAO.getUserInfo(username);
+
+                if(null!=user){
+                    String displayName = user.getString("firstName") + " " + user.getString("lastName");
+                    attributes.put("userType", user.getString("userType"));
+                    attributes.put("hdrLink", "");
+                    attributes.put("hdrLabel", "Welcome " + displayName);
+                }
+
+                if(null!=classCode) {
+                    Document docClass = courseDAO.findById(classCode);
+                    if (null != docClass) {
+                        String className = docClass.getString("className");
+                        String classDescription = docClass.getString("classDescription");
+                        attributes.put("className", className);
+                        attributes.put("classDescription", classDescription);
+                    }
+                }
+            }
+            else {
+                response.redirect("/login");
+            }
+
+            return new ModelAndView(attributes, "search_student.ftl");
+        }, new FreeMarkerTemplateEngine());
+
+
+        get("searchClass",(request, response) -> {
             Map<String, Object> attributes = new HashMap<>();
 
             Document user = null;
@@ -472,29 +753,63 @@ public class ProjectController implements Mapper{
             List<Document> classes = courseDAO.findBySearchKey(searchKey);
             attributes.put("classes", classes);
 
-            if(null!=username)
+            if(null!=username) {
+                attributes.put("username", username);
                 user = userDAO.getUserInfo(username);
-
-            if(null!=user){
-                String displayName = user.getString("firstName") + " " + user.getString("lastName");
-                attributes.put("userType", user.getString("userType"));
-                attributes.put("hdrLink", "");
-                attributes.put("hdrLabel", "Welcome " + displayName);
-            }
-
-            if (username == null) {
-                // looks like a bad request. user is not logged in
-                response.redirect("/login");
+                if(null!=user){
+                    String displayName = user.getString("firstName") + " " + user.getString("lastName");
+                    attributes.put("userType", user.getString("userType"));
+                    attributes.put("hdrLink", "");
+                    attributes.put("hdrLabel", "Welcome " + displayName);
+                }
             }
             else {
-                attributes.put("username", username);
+                response.redirect("/login");
             }
 
             return new ModelAndView(attributes, "search_class.ftl");
         }, new FreeMarkerTemplateEngine());
 
+
+        get("/newVideo", (request, response) -> {
+            Map<String, Object> attributes = new HashMap<>();
+            Document user = null;
+
+            String sessionId = ResourceUtilities.getSessionCookie(request);
+            String username = sessionDAO.findUserNameBySessionId(sessionId);
+            attributes.put("sessionId", sessionId);
+
+            if(null!=username){
+                attributes.put("username", username);
+                user = userDAO.getUserInfo(username);
+                if(null!=user){
+                    ArrayList<String> userClasses = new ArrayList<>();
+                    ArrayList<Document> listUserClasses = new ArrayList<>();
+                    ArrayList<String> classCodes =  (ArrayList) user.get("classes");
+                    if(null!=classCodes){
+                        for(String cc : classCodes){
+                            userClasses.add(cc);
+                            listUserClasses.add(courseDAO.findById(cc));
+                        }
+                    }
+
+                    String displayName = user.getString("firstName") + " " + user.getString("lastName");
+                    attributes.put("userType", user.getString("userType"));
+                    attributes.put("hdrLink", "");
+                    attributes.put("hdrLabel", "Welcome " + displayName);
+                    attributes.put("userClasses", listUserClasses);
+                }
+            }
+            else {
+                response.redirect("/login");
+            }
+
+            return new ModelAndView(attributes, "videos.ftl");
+        }, new FreeMarkerTemplateEngine());
+
+
         // will present the form used to process new quiz posting
-        get("postQuiz", (request, response) -> {
+        get("postTopic", (request, response) -> {
             Map<String, Object> attributes = new HashMap<>();
 
             Document user = null;
@@ -518,6 +833,9 @@ public class ProjectController implements Mapper{
 
                 List<Document> userClasses = courseDAO.getAllClassesByTeacher(username);
                 attributes.put("userClasses", userClasses);
+
+                List<Document> videos = this.videoDAO.getVideos(username);
+                attributes.put("videos", videos);
             }
 
             return new ModelAndView(attributes, "new_topic_template.ftl");
@@ -548,9 +866,16 @@ public class ProjectController implements Mapper{
 
                 String topicId = StringEscapeUtils.escapeHtml4(request.queryParams("tid"));
 
+//                System.out.println("\n\n");
+//                System.out.println("VIEW-TOPIC");
+//                System.out.println("---------------------------------------------");
+//                System.out.println("[TOPIC-ID]: " + topicId);
+//                System.out.println("---------------------------------------------");
+//                System.out.println("\n\n");
                 boolean allowTopicSubmit = false;
                 if(null!=topicId){
                     Document docTopic = topicDAO.findById(topicId);
+//                    System.out.println("TOPIC: " + docTopic.toJson());
                     if(null!=docTopic){
                         attributes.put("topicId", docTopic.getString("_id"));
 
@@ -564,12 +889,19 @@ public class ProjectController implements Mapper{
                             }
                         }
 
+//                        System.out.println("[topic]: " + docTopic.getString("topic"));
+//                        System.out.println("[videoLink]: " + docTopic.getString("videoLink"));
+//                        System.out.println("[summary]: " + docTopic.getString("summary"));
+
+
                         attributes.put("topic", docTopic.getString("topic"));
                         attributes.put("summary", docTopic.getString("summary"));
                         attributes.put("videoLink", docTopic.getString("videoLink"));
                         attributes.put("showVideoPlayer", true);
 
                         ArrayList<Document> items =  (ArrayList) docTopic.get("items");
+//                        System.out.println("items.count: " + items.size());
+
                         attributes.put("items", items);
 
                         //If student has taken the topic quiz, it should show the list of top student scores for this topic
@@ -579,6 +911,7 @@ public class ProjectController implements Mapper{
                         }
                         else
                             allowTopicSubmit = true;
+
                     }
                     else {
                         System.out.println("Topic not found!");
@@ -600,6 +933,14 @@ public class ProjectController implements Mapper{
             return new ModelAndView(attributes, "view_topic_template.ftl");
         }, new FreeMarkerTemplateEngine());
 
+
+
+
+
+
+
+
+
         // tells the user that the URL is dead
         get("post_not_found", (request, response) -> {
             Map<String, Object> attributes = new HashMap<>();
@@ -615,13 +956,13 @@ public class ProjectController implements Mapper{
         }, new FreeMarkerTemplateEngine());
     }
 
-    public boolean studentTakenTopicQuiz(List<Document> list, String id){
+    public Document getStudentTakenTopicQuiz(List<Document> list, String id){
         if(null!=list && null!=id){
             for(Document d : list){
                 String topicId = d.getString("topicId");
-                if(null!=topicId && id.equalsIgnoreCase(topicId)) return true;
+                if(null!=topicId && id.equalsIgnoreCase(topicId)) return d;
             }
         }
-        return false;
+        return null;
     }
 }

@@ -5,7 +5,7 @@
     <head>
         <@t.headerMetaTags />
 
-        <title>Quiz Bank: Create a new Quiz</title>
+        <title>Capstone: Create a new Quiz</title>
 
         <link href="css/bootstrap.min.css" rel="stylesheet">
         <link rel="stylesheet" href="css/font-awesome.min.css">
@@ -18,7 +18,7 @@
             <div class="row sm-flex-center top-space">
                 <div class="col-sm-7 column-separator">
                     <div class="panel panel-info">
-                        <h4>Topic</h4>
+                        <h4><i class="fa fa-file-text-o" aria-hidden="true"></i>&nbsp;&nbsp;Topic</h4>
                         <div class="panel-body" style="border-right: 1px solid #eee;">
                         <#--<form id="postquizform" class="form-horizontal" role="form" action="/postQuiz" method="POST">-->
                             <div class="form-group has-error has-feedback">
@@ -34,6 +34,20 @@
                                         </ul>
                                     <#else>
                                         <option value="N_A">No Class Available</option>
+                                    </#if>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="txtTitle" class="col-md-3 control-label">Video Topics</label>
+                                <div class="col-md-11">
+                                    <select id="selVideoTopics" class="form-control">
+                                        <option value="">Select a video</option>
+                                    <#if videos??>
+                                        <#list videos as v>
+                                            <option class="list-group-item" value="${v["videoLink"]}">${v["topic"]}</option>
+                                        </#list>
                                     </#if>
                                     </select>
                                 </div>
@@ -69,13 +83,13 @@
                 </div>
                 <div class="col-sm-5 pull-right">
                     <div class="panel panel-info">
-                        <h4>Questions</h4>
+                        <h4><i class="fa fa-question-circle" aria-hidden="true"></i>&nbsp;Questions</h4>
                         <div class="panel-body underlined" style="border-right: 1px solid #eee;">
                             <ol id="listQuestions">
                             </ol>
                         </div>
                         <div>
-                            <button type="button" class="btn btn-info btn-md" onclick="createNewItem()">Add Question</button>
+                            <button type="button" class="btn btn-info btn-md" onclick="createNewItem()"><i class="fa fa-plus-square-o" aria-hidden="true"></i>&nbsp;Add Question</button>
                         </div>
                     </div>
                 </div>
@@ -84,7 +98,7 @@
                 <div class="form-group">
                     <!-- Button -->
                     <div class="col-md-offset-3 col-md-11">
-                        <button type="button" class="btn btn-primary btn-lg" onclick="postTopic()">Post Topic</button>
+                        <button type="button" class="btn btn-primary btn-lg" onclick="postTopic()"><i class="fa fa-file-text-o" aria-hidden="true"></i>&nbsp;&nbsp;Post Topic</button>
                     </div>
                 </div>
             </div>
@@ -150,6 +164,12 @@
                                 <p>
                                     <input type="text" class="form-control" id="txtChoiceE" name="choices" class="form-control" placeholder="e.)" title="Enter Option or Choice that the student can select in answering the question." />
                                 </p>
+                                <p>
+                                    <input type="text" class="form-control" id="txtChoiceF" name="choices" class="form-control" placeholder="f.)" title="Enter Option or Choice that the student can select in answering the question." />
+                                </p>
+                                <p>
+                                    <input type="text" class="form-control" id="txtChoiceG" name="choices" class="form-control" placeholder="g.)" title="Enter Option or Choice that the student can select in answering the question." />
+                                </p>
                             </div>
 
                             <h5>Answer(s)</h5>
@@ -174,13 +194,19 @@
                                 <p>
                                     <input type="text" class="form-control" id="txtAnswerE" name="manswer" class="form-control" placeholder="[Answer]" />
                                 </p>
+                                <p>
+                                    <input type="text" class="form-control" id="txtAnswerF" name="manswer" class="form-control" placeholder="[Answer]" />
+                                </p>
+                                <p>
+                                    <input type="text" class="form-control" id="txtAnswerG" name="manswer" class="form-control" placeholder="[Answer]" />
+                                </p>
                             </div>
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-info" data-dismiss="modal" onclick="saveQuestion()">Save</button>
-                        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                        <button type="button" class="btn btn-warning" data-dismiss="modal" onclick="removeQuestion()">Remove</button>
+                        <button type="button" class="btn btn-info" data-dismiss="modal" onclick="saveQuestion()"><i class="fa fa-floppy-o" aria-hidden="true"></i>&nbsp;Save</button>
+                        <button type="button" class="btn btn-default" data-dismiss="modal"><i class="fa fa-times" aria-hidden="true"></i>&nbsp;Close</button>
+                        <button type="button" class="btn btn-danger" data-dismiss="modal" onclick="removeQuestion()"><i class="fa fa-trash-o" aria-hidden="true"></i>&nbsp;Remove</button>
                     </div>
                 </div>
 

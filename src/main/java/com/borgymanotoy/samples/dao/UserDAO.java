@@ -1,6 +1,22 @@
+/*
+ * Copyright 2012-2016 MongDB, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
+
 package com.borgymanotoy.samples.dao;
 
-import com.mongodb.MongoWriteException;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.borgymanotoy.samples.model.User;
@@ -10,75 +26,87 @@ import sun.misc.BASE64Encoder;
 import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Random;
 
-import static com.mongodb.client.model.Filters.and;
-import static com.mongodb.client.model.Filters.eq;
+import static com.mongodb.client.model.Filters.*;
+import static com.mongodb.client.model.Filters.regex;
 
 public class UserDAO {
     private final MongoCollection<Document> usersCollection;
-    private Random random = new SecureRandom();
 
     public UserDAO(final MongoDatabase projectDatabase) {
         usersCollection = projectDatabase.getCollection("users");
     }
 
-    public boolean addUser(String username, String password, String firstName, String lastName, String email, String userType) {
+    public List<Document> findBySearchKey(String searchKey) {
+        if(null!=searchKey && !"".equals(searchKey))
+            return usersCollection.find(and(eq("userType", "S"), or(regex("_id", searchKey, "i"), regex("firstName", searchKey, "i"), regex("lastName", searchKey, "i"), regex("email", searchKey, "i")))).into(new ArrayList<>());
 
-        String passwordHash = makePasswordHash(password, Integer.toString(random.nextInt()));
-
-        Document user = new Document();
-
-        user.append("_id", username).append("password", passwordHash);
-
-        if(null!=firstName && !firstName.equals("")){
-            user.append("firstName", firstName);
-        }
-
-        if(null!=lastName && !lastName.equals("")){
-            user.append("lastName", lastName);
-        }
-
-        if (email != null && !email.equals("")) {
-            // the provided email address
-            user.append("email", email);
-        }
-
-        if (userType != null && !userType.equals("")) {
-            // the selected user type (T or S)
-            user.append("userType", userType);
-        }
-
-        user.append("isActive", true);
-
-        try {
-            usersCollection.insertOne(user);
-            return true;
-        } catch (MongoWriteException e) {
-            System.out.println("Username already in use: " + username);
-            return false;
-        }
+        return null;
     }
 
-    public boolean deactivateUser(String username){
+    public boolean addUser(User user){
+        if(null!=user){
+            user.setLastModifiedDate(new Date());
+            Document docUser = Document.parse(user.toString());
+            try {
+                this.usersCollection.insertOne(docUser);
+                System.out.println("Successfully registered user!");
+                return true;
+            } catch (Exception e) {
+                System.out.println("Error registering user");
+            }
+        }
+        return false;
+    }
+
+    public boolean updateUserProfile(String username, String firstName, String lastName, String email, boolean isActive){
         boolean status = false;
         if(null!=username){
             Document docClass = new Document();
-            docClass.append("isActive", false);
+            docClass.append("firstName", firstName);
+            docClass.append("lastName", lastName);
+            docClass.append("email", email);
+            docClass.append("isActive", isActive);
             docClass.append("lastModifiedDate", new Date());
 
             Document docUpdate = new Document("$set", docClass);
-            usersCollection.updateOne(eq("username", username), docUpdate);
+
+            String updateQuery = docUpdate.toJson();
+            System.out.println("\n[update-query]: " + updateQuery);
+
+            usersCollection.updateOne(eq("_id", username), docUpdate);
             return true;
         }
         return status;
     }
 
-    public boolean addUserClasses(String username, String classCode, String className){
+    public boolean removeUserCourse(String username, String classCode){
+        if(null!=username && null!=classCode){
+            Document user = usersCollection.find(eq("_id", username)).first();
+            if(null!=user){
+                ArrayList<String> classes =  (ArrayList) user.get("classes");
+                if(null!=classes){
+                    for(int idx=0; idx < classes.size(); idx++){
+                        String course = classes.get(idx);
+                        System.out.println("[course]: " + course);
+
+                        if(course.equalsIgnoreCase(classCode)){
+                            classes.remove(idx);
+                            break;
+                        }
+                    }
+                }
+                usersCollection.updateOne(eq("_id", username), new Document("$set", new Document("classes", classes)));
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean addUserClasses(String username, String classCode) throws Exception{
         if(null!=username && null!=classCode){
             //db.users.find({"_id": "borgymanotoy", "classes" : "CS56"});
             //Document userClass = usersCollection.find(and(eq("_id", username), eq("classes", classCode))).first();
@@ -89,7 +117,7 @@ public class UserDAO {
                 return true;
             }
             else
-                System.out.println("User-Class already exists. Cannot proceed adding user-class.");
+                throw new Exception("User-Class already exists. Cannot proceed adding user-class.");
         }
         return false;
     }
@@ -107,13 +135,14 @@ public class UserDAO {
 
     public List<Document> getClassStudents(String classCode){
         //db.users.find({"userType":"S","classes.code": "CS21"}).pretty();
-        return usersCollection.find(and(eq("userType", "S"), eq("classes", classCode))).into(new ArrayList<>());
+        return usersCollection.find(and(eq("userType", "S"), eq("isActive", true), eq("classes", classCode))).into(new ArrayList<>());
     }
+
 
     public List<User> getTeacherAccounts(){
         //db.users.find({userType: "T"}).pretty();
         List<User> users = new ArrayList<>();
-        List<Document> lstDocUsers = usersCollection.find(eq("userType", "T")).into(new ArrayList<>());
+        List<Document> lstDocUsers = usersCollection.find(and(eq("userType", "T"), eq("isActive", true))).into(new ArrayList<>());
         for(Document d : lstDocUsers)
             users.add(new User(d));
         return users;
@@ -122,7 +151,7 @@ public class UserDAO {
     public List<User> getStudentAccounts(){
         //db.users.find({userType: "T"}).pretty();
         List<User> users = new ArrayList<>();
-        List<Document> lstDocUsers = usersCollection.find(eq("userType", "S")).into(new ArrayList<>());
+        List<Document> lstDocUsers = usersCollection.find(and(eq("userType", "S"), eq("isActive", true))).into(new ArrayList<>());
         for(Document d : lstDocUsers)
             users.add(new User(d));
         return users;
@@ -137,21 +166,15 @@ public class UserDAO {
     }
 
     public Document validateLogin(String username, String password) {
-        Document user = usersCollection.find(eq("_id", username)).first();
-
-        if (user == null) {
-            System.out.println("User not in database");
-            return null;
-        }
+        Document user = usersCollection.find(or(eq("_id", username), eq("email", username))).first();
+        if (user == null) return null;
 
         String hashedAndSalted = user.get("password").toString();
-
         String salt = hashedAndSalted.split(",")[1];
+        String passwordHash = makePasswordHash(password, salt);
+        boolean loginVerified = hashedAndSalted.equals(passwordHash);
 
-        if (!hashedAndSalted.equals(makePasswordHash(password, salt))) {
-            System.out.println("Submitted password is not a match");
-            return null;
-        }
+        if (!loginVerified) return null;
 
         return user;
     }

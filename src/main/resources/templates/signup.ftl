@@ -4,35 +4,23 @@
 <html>
     <head>
         <@t.headerMetaTags />
-        <title>Quiz Bank: Sign Up</title>
+        <title>Capstone: Sign Up</title>
 
         <!-- Bootstrap core CSS -->
         <link href="css/bootstrap.min.css" rel="stylesheet">
-
-        <style type="text/css">
-            body {
-                padding-top: 54px;
-            }
-            @media (min-width: 992px) {
-                body {
-                    padding-top: 56px;
-                }
-            }
-
-            div.radio { display: inline-block; padding: 10px; margin-left: 30px; }
-
-            .label {text-align: right}
-            .error {color: red}
-        </style>
+        <link rel="stylesheet" href="css/font-awesome.min.css">
+        <link rel="stylesheet" href="css/signup.css">
     </head>
 
     <body>
         <@t.navigationDiv />
 
-        <div id="signupbox" style="margin-top:50px" class="mainbox col-md-6 col-md-offset-3 col-sm-8 col-sm-offset-2">
-          <div class="panel panel-info">
+        <div id="signupbox" class="row">
+            <div class="panel panel-info">
+                <h4><i class="fa fa-sign-in" aria-hidden="true"></i>&nbsp;Account Registration</h4>
+                <hr />
               <div class="panel-body" >
-                  <form id="signupform" class="form-horizontal" role="form" action="/signup" method="post">
+                  <form id="signupform" class="form-horizontal" action="/registerUser" method="post">
 
                       <#if signup_error??>
                           <div id="signupalert" style="display:none" class="alert alert-danger">
@@ -43,21 +31,21 @@
                       <div class="form-group has-error has-feedback">
                           <label for="txtFirstName" class="col-md-3 control-label">First Name</label>
                           <div class="col-md-9">
-                              <input type="text" id="txtFirstName" class="form-control" name="firstName" placeholder="First Name" />
+                              <input type="text" id="txtFirstName" class="form-control" name="firstName" placeholder="First Name" value="${firstName!''}" required />
                           </div>
                       </div>
 
                       <div class="form-group has-error has-feedback">
                           <label for="txtLastName" class="col-md-3 control-label">Last Name</label>
                           <div class="col-md-9">
-                              <input type="text" id="txtLastName" class="form-control" name="lastName" placeholder="Last Name" />
+                              <input type="text" id="txtLastName" class="form-control" name="lastName" placeholder="Last Name" value="${lastName!''}" required />
                           </div>
                       </div>
 
                       <div class="form-group has-error has-feedback">
-                          <label for="username" class="col-md-3 control-label">Username</label>
+                          <label for="txtUsername" class="col-md-3 control-label">Username</label>
                           <div class="col-md-9">
-                              <input type="text" class="form-control" name="username" placeholder="Username" />
+                              <input type="text" class="form-control" id="txtUsername" name="username" placeholder="Username" value="${username!''}" required />
                               <span class="glyphicon glyphicon-remove form-control-feedback"></span>
                           </div>
                       </div>
@@ -65,21 +53,21 @@
                       <div class="form-group">
                           <label for="password" class="col-md-3 control-label">Password</label>
                           <div class="col-md-9">
-                              <input type="password" class="form-control" name="password" placeholder="Password">
+                              <input type="password" class="form-control" id="txtPassword" name="password" placeholder="Password" value="${password!''}" required>
                           </div>
                       </div>
 
                       <div class="form-group">
                           <label for="verify" class="col-md-3 control-label">Verify Password</label>
                           <div class="col-md-9">
-                              <input type="password" class="form-control" name="verify" placeholder="Verify Password">
+                              <input type="password" class="form-control" id="txtVerifyPassword" placeholder="Verify Password" required>
                           </div>
                       </div>
 
                       <div class="form-group">
-                          <label for="email" class="col-md-3 control-label">Email (Optional)</label>
+                          <label for="txtEmail" class="col-md-3 control-label">Email (Optional)</label>
                           <div class="col-md-9">
-                              <input type="text" class="form-control" name="email" placeholder="Email Address (Optional)">
+                              <input type="email" class="form-control" id="txtEmail" name="email" placeholder="Email Address (Optional)" value="${email!''}" required>
                           </div>
                       </div>
 
@@ -94,18 +82,18 @@
                           </div>
                       </div>
 
-                      <div class="form-group">
-                          <!-- Button -->
-                          <div class="col-md-offset-3 col-md-9">
-                              <input type="submit" id="btn-signup" class="btn btn-info" value="&nbsp Sign Up" />
-                          </div>
-                      </div>
-
                   </form>
               </div>
-          </div>
+                <hr />
+                <div class="form-group">
+                    <div class="col-md-offset-3 col-md-9">
+                        <button id="btnSignUp" class="btn btn-info"><i class="fa fa-address-book-o" aria-hidden="true"></i>&nbsp;&nbsp;Sign Up</button>
+                    </div>
+                </div>
+            </div>
       </div>
 
         <@t.bootstrapCoreJS />
+        <script src="js/signup.js"></script>
     </body>
 </html>

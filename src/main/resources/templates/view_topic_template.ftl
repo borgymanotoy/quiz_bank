@@ -5,17 +5,11 @@
     <head>
         <@t.headerMetaTags />
 
-        <title>Quiz Bank: Create a new Quiz</title>
+        <title>Capstone: Create a new Quiz</title>
 
         <link href="css/bootstrap.min.css" rel="stylesheet">
         <link rel="stylesheet" href="css/font-awesome.min.css">
         <link rel="stylesheet" href="css/topics.css">
-
-        <style>
-            input[type='radio'], input[type='checkbox'] {
-                margin-right: 10px;
-            }
-        </style>
     </head>
     <body>
         <@t.navigationDiv />

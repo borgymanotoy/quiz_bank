@@ -3,6 +3,7 @@ package com.borgymanotoy.samples.dao;
 import com.mongodb.MongoWriteException;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.Sorts;
 import org.bson.Document;
 
@@ -64,6 +65,11 @@ public class CourseEnrollmentDAO {
         return null;
     }
 
+    //List<Document> findCourseEnrollmentsForTeacher(teacherUsername)
+    //List<Document> findCourseEnrollmentsByStudent(studentUsername)
+    //Document courseEnrollment = findCourseEnrollment(teacherUsername, courseCode, studentUsername)
+    //boolean updateCourseEnrollment(teacherUsername, courseCode, studentUsername, enrollmentStatus)
+
     public boolean removeCourseEnrollment(String course, String student){
         if(null!=course && null!=student){
             courseEnrollmentCollection.deleteMany(and(eq("class", course), eq("student", student)));
@@ -71,4 +77,5 @@ public class CourseEnrollmentDAO {
         }
         return false;
     }
+
 }

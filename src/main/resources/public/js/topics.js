@@ -2,6 +2,19 @@ var topic = new Object();
 var items = new Array();
 
 $(document).ready(function(){
+    reloadOwnVideos();
+
+    $('#selClass').on('change', function () {
+        if(''!=this.value){
+            reloadTopicVideos(this.value);
+        }
+    });
+
+    $('#selVideoTopics').on('change', function () {
+        if(''!=this.value){
+            loadVideoDetails(this.value);
+        }
+    });
 
     $('#txtVideoUrl').on('keydown', function(event){
         var keyCode = (event.keyCode ? event.keyCode : event.which);
@@ -56,6 +69,8 @@ var loadTestDetails = function(){
     $('#txtChoiceC').val('Test Deficiency Development');
     $('#txtChoiceD').val('Test Drive Development');
     $('#txtChoiceE').val('Non of the Above');
+    $('#txtChoiceF').val('None of the Above');
+    $('#txtChoiceG').val('Really none of the Above');
 
     $('#txtSingleAnswer').val('Test Driven Development');
 }
@@ -115,6 +130,8 @@ var saveQuestion = function(){
         if(''!=$('#txtChoiceC').val().trim()) choices.push($('#txtChoiceC').val());
         if(''!=$('#txtChoiceD').val().trim()) choices.push($('#txtChoiceD').val());
         if(''!=$('#txtChoiceE').val().trim()) choices.push($('#txtChoiceE').val());
+        if(''!=$('#txtChoiceF').val().trim()) choices.push($('#txtChoiceF').val());
+        if(''!=$('#txtChoiceG').val().trim()) choices.push($('#txtChoiceG').val());
 
         if('SINGLE_ANSWER'==qType){
             if(''!=$('#txtSingleAnswer').val().trim()) answers.push($('#txtSingleAnswer').val())
@@ -125,6 +142,8 @@ var saveQuestion = function(){
             if(''!=$('#txtAnswerC').val().trim()) answers.push($('#txtAnswerC').val());
             if(''!=$('#txtAnswerD').val().trim()) answers.push($('#txtAnswerD').val());
             if(''!=$('#txtAnswerE').val().trim()) answers.push($('#txtAnswerE').val());
+            if(''!=$('#txtAnswerF').val().trim()) answers.push($('#txtAnswerF').val());
+            if(''!=$('#txtAnswerG').val().trim()) answers.push($('#txtAnswerG').val());
         }
 
     }
@@ -205,6 +224,8 @@ var displayItemDetails = function(id){
                         if(i==2) $('#txtChoiceC').val(choice);
                         if(i==3) $('#txtChoiceD').val(choice);
                         if(i==4) $('#txtChoiceE').val(choice);
+                        if(i==5) $('#txtChoiceF').val(choice);
+                        if(i==6) $('#txtChoiceG').val(choice);
                     }
                 }
             }
@@ -220,6 +241,8 @@ var displayItemDetails = function(id){
                         if(i==2) $('#txtAnswerC').val(answer);
                         if(i==3) $('#txtAnswerD').val(answer);
                         if(i==4) $('#txtAnswerE').val(answer);
+                        if(i==5) $('#txtAnswerF').val(answer);
+                        if(i==6) $('#txtAnswerG').val(answer);
                     }
                 }
             }
@@ -260,6 +283,8 @@ var clearItemFields = function(){
     $('#txtChoiceC').val("");
     $('#txtChoiceD').val("");
     $('#txtChoiceE').val("");
+    $('#txtChoiceF').val("");
+    $('#txtChoiceG').val("");
 
     $("input[name=bChoice]").prop("checked",false);
 
@@ -269,6 +294,8 @@ var clearItemFields = function(){
     $('#txtAnswerC').val("");
     $('#txtAnswerD').val("");
     $('#txtAnswerE').val("");
+    $('#txtAnswerF').val("");
+    $('#txtAnswerG').val("");
 };
 
 var reloadItemList = function(){
@@ -334,4 +361,38 @@ var postTopic = function(){
     else
         bootbox.alert("Please fill up all topic fields.");
 
+};
+
+var reloadTopicVideos = function(course){
+    console.log('[course]: ' + course);
+    if(course){
+        $.getJSON( "/getClassVideos?c=" + course, function(data) {
+            $('#selVideoTopics').empty().append("<option value=\"\">Select a video</option>");
+            $.each( data, function( key, item ) {
+                $('#selVideoTopics').append("<option value='" + item._id + "'>" + item.topic + "</option>")
+            });
+        }, "json");
+    }
+};
+
+var reloadOwnVideos = function(){
+    $.getJSON( "/getUserVideos", function(data) {
+        $('#selVideoTopics').empty().append("<option value=\"\">Select a video</option>");
+        $.each( data, function( key, item ) {
+            $('#selVideoTopics').append("<option value='" + item._id + "'>" + item.topic + "</option>")
+        });
+    }, "json");
+};
+
+var loadVideoDetails = function(id){
+    console.log('[id]: ' + id);
+    if(id){
+        $.getJSON( "/getVideoDetails?v=" + id, function(data) {
+            if(data){
+                $('#txtTopic').val(data.topic);
+                $('#txtVideoUrl').val(data.videoLink);
+                reloadVideo(data.videoLink);
+            }
+        }, "json");
+    }
 };

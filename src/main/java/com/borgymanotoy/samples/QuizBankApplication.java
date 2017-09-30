@@ -8,11 +8,13 @@ import static spark.Spark.*;
 
 public class QuizBankApplication {
 
-    private final static String DB_CONNSTR_LOCAL = "mongodb://localhost/db_quiz_bank";
+    private final static String DB_CONNSTR_ATLAST = "mongodb://borgymanotoy:P%40sudl%40k0_123@cluster0-shard-00-00-2xw8u.mongodb.net:27017,cluster0-shard-00-01-2xw8u.mongodb.net:27017,cluster0-shard-00-02-2xw8u.mongodb.net:27017/db_capstone?ssl=true&replicaSet=Cluster0-shard-0&authSource=admin";
+    private final static String DB_CONNSTR_LOCAL = "mongodb://localhost/db_capstone";
 
     public static void main(String[] args) throws IOException {
         port(getHerokuAssignedPort());
         staticFileLocation("/public");
+        staticFiles.externalLocation("resources/");
         if (args.length == 0) {
             new ProjectController(DB_CONNSTR_LOCAL);
             new ProjectRestController(DB_CONNSTR_LOCAL);

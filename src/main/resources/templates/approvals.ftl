@@ -5,25 +5,12 @@
 
     <head>
         <@t.headerMetaTags />
-        <title>Quiz Bank: Student-Class Registrations for Approval</title>
+        <title>Capstone: Student-Class Registrations for Approval</title>
 
         <!-- Bootstrap core CSS -->
         <link href="css/bootstrap.min.css" rel="stylesheet">
-
-        <!-- Custom styles for this template -->
-        <style>
-            body {
-                padding-top: 54px;
-            }
-            @media (min-width: 992px) {
-                body {
-                    padding-top: 56px;
-                }
-            }
-
-            div#divMain { padding: 25px; }
-        </style>
-
+        <link rel="stylesheet" href="css/font-awesome.min.css">
+        <link rel="stylesheet" href="css/approvals.css">
     </head>
 
     <body>
@@ -34,7 +21,7 @@
         <div id="divMain" class="container">
             <div class="row">
                 <div class="col-sm-12">
-                    <h4>Student Registration to Class for Approval</h4>
+                    <h4><i class="fa fa-users" aria-hidden="true"></i>&nbsp;Student Registration to Class for Approval</h4>
                     <br />
                     <table id="tblEnrollmentForApproval" class="table table-hover">
                         <thead>
@@ -64,41 +51,8 @@
             </div>
         </div>
 
-
         <@t.bootstrapCoreJS />
-
-
-        <script>
-            $(document).ready(function(){
-                //Put initializations here
-            });
-
-            var reloadEnrollmentList = function(){
-                var my_url = "/courseRegistrations";
-                $.getJSON(my_url, function(json) {
-                    $('table#tblEnrollmentForApproval tbody').empty();
-                    $.each(json, function(idx, doc) {
-                        $('table#tblEnrollmentForApproval tbody').append("<tr><td>" + doc.className + " (" + doc.class + ")</td><td>" + doc.studentName + "</td><td><a href='javascript:void(0);' onclick=\"approveStudentClassEnrollment('" + doc.student + "','" + doc.class + "')\" class=\"btn btn-primary\" role=\"button\">Approve</a></td><td><a href='javascript:void(0);' onclick=\"denyStudentClassEnrollment('" + doc.student + "','" + doc.class + "')\" class=\"btn btn-primary\" role=\"button\">Deny</a></td></tr>");
-                    });
-                });
-            }
-
-            var approveStudentClassEnrollment = function(student, classCode){
-                var my_url = "/approveEnrollment?cc=" + classCode + "&su=" + student;
-                $.post(my_url, function(msg){
-                    bootbox.alert(msg);
-                    reloadEnrollmentList();
-                });
-            };
-
-            var denyStudentClassEnrollment = function(student, classCode){
-                var my_url = "/denyEnrollment?cc=" + classCode + "&su=" + student;
-                $.post(my_url, function(msg){
-                    bootbox.alert(msg);
-                    reloadEnrollmentList();
-                });
-            };
-        </script>
+        <script src="js/approvals.js"></script>
     </body>
 
 </html>

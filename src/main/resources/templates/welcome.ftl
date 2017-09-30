@@ -4,28 +4,13 @@
 <html>
     <head>
         <@t.headerMetaTags />
-        <title>Quiz Bank: Welcome</title>
+        <title>Capstone: Welcome</title>
 
         <!-- Bootstrap core CSS -->
         <link href="css/bootstrap.min.css" rel="stylesheet">
+        <link rel="stylesheet" href="css/font-awesome.min.css">
+        <link rel="stylesheet" href="css/welcome.css">
         <@t.headerFavicons />
-
-        <style type="text/css">
-            body {
-                padding-top: 54px;
-            }
-            @media (min-width: 992px) {
-                body {
-                    padding-top: 56px;
-                }
-            }
-
-            div#divMainContainer { padding: 25px; }
-            h4 { padding: 20px 0; }
-
-            .label {text-align: right}
-            .error {color: red}
-        </style>
     </head>
     <body>
         <!-- Navigation -->
@@ -33,10 +18,10 @@
 
         <!-- Page Content -->
         <div id="divMainContainer" class="container">
-            <#if userType?? && 'T'==userType>
+            <#if 'T'==userType>
                 <div class="row sm-flex-center">
                     <div class="col-sm-4">
-                        <h4>Classes</h4>
+                        <h4><i class="fa fa-list-ul" aria-hidden="true"></i>&nbsp;Classes</h4>
                         <div class="list">
                             <#if userClasses??>
                                 <ul class="list-group">
@@ -48,7 +33,7 @@
                         </div>
                     </div>
                     <div class="col-sm-8 pull-right">
-                        <h4>Student Registration to Class for Approval</h4>
+                        <h4><i class="fa fa-users" aria-hidden="true"></i>&nbsp;Student Registration to Class for Approval</h4>
                         <table id="tblEnrollmentForApproval" class="table table-hover">
                             <thead>
                             <tr>
@@ -94,7 +79,7 @@
                         <#if topics??>
                             <ul class="list-group">
                                 <#list topics as t>
-                                    <li class="list-group-item" onclick="window.location='/viewTopic?tid=${t["_id"]}'">(${t["classCode"]}) : ${t["topic"]} <#if t["taken"]?? && t["taken"]><strong> - Taken</strong></#if></li>
+                                    <li class="list-group-item" onclick="window.location='/viewTopic?tid=${t["_id"]}'">(${t["classCode"]}) : ${t["topic"]} <#if t["taken"]?? && t["taken"]><strong> - Taken (${t["percentage"]}%)</strong></#if></li>
                                 </#list>
                             </ul>
                         </#if>
@@ -111,39 +96,7 @@
         </div>
 
         <@t.bootstrapCoreJS />
-
-
-        <script>
-            $(document).ready(function(){
-                //Put initializations here
-            });
-
-            var reloadEnrollmentList = function(){
-                var my_url = "/courseRegistrations";
-                $.getJSON(my_url, function(json) {
-                    $('table#tblEnrollmentForApproval tbody').empty();
-                    $.each(json, function(idx, doc) {
-                        $('table#tblEnrollmentForApproval tbody').append("<tr><td>" + doc.className + " (" + doc.class + ")</td><td>" + doc.studentName + "</td><td><a href='javascript:void(0);' onclick=\"approveStudentClassEnrollment('" + doc.student + "','" + doc.class + "')\" class=\"btn btn-primary\" role=\"button\">Approve</a></td><td><a href='javascript:void(0);' onclick=\"denyStudentClassEnrollment('" + doc.student + "','" + doc.class + "')\" class=\"btn btn-primary\" role=\"button\">Deny</a></td></tr>");
-                    });
-                });
-            }
-
-            var approveStudentClassEnrollment = function(student, classCode){
-                var my_url = "/approveEnrollment?cc=" + classCode + "&su=" + student;
-                $.post(my_url, function(msg){
-                    bootbox.alert(msg);
-                    reloadEnrollmentList();
-                });
-            };
-
-            var denyStudentClassEnrollment = function(student, classCode){
-                var my_url = "/denyEnrollment?cc=" + classCode + "&su=" + student;
-                $.post(my_url, function(msg){
-                    bootbox.alert(msg);
-                    reloadEnrollmentList();
-                });
-            };
-        </script>
+        <script src="js/welcome.js"></script>
 
     </body>
 </html>

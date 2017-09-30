@@ -7,6 +7,18 @@ import java.util.Date;
 
 public class Course {
 
+/*
+    {
+        "_id" : ObjectId("59932c1d6f04075c65f7a425"),
+            "teacher" : "ejsalipahmad",
+            "classCode" : "CS56",
+            "className" : "Software Engineering",
+            "classDescription" : "Introduction to Software Engineering",
+            "creationDate" : ISODate("2017-08-15T17:15:09.339Z"),
+            "lastModifiedDate" : ISODate("2017-08-15T17:15:09.339Z")
+    }
+*/
+
     private ObjectId objId;
     private String teacher;
     private String classCode;

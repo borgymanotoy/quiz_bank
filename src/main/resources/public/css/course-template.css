@@ -1,0 +1,27 @@
+body {
+    padding-top: 54px;
+}
+@media (min-width: 992px) {
+    body {
+        padding-top: 56px;
+    }
+}
+
+h4 { padding: 20px 0; }
+
+.top-space { margin-top: 30px; }
+
+.column-separator { border-right: 1px solid #eee; }
+input[type='text'] { width: 91.5%; }
+textarea { width: 91.5%; }
+
+span.status {
+    font-family: "Courier New", Georgia, Serif;
+    font-style: italic;
+    font-size: 0.65em;
+    padding: 5px;
+    border: 1px solid #ddd;
+    background-color: #eee;
+}
+
+span.details, p.details { margin-left: 10px; }

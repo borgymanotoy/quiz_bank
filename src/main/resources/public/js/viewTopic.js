@@ -64,7 +64,6 @@ var submitTopicQuiz = function(){
         console.log(topic_quiz);
         $.post( "/submitTopicAnswers", JSON.stringify(topic_quiz), function( msg ) {
             bootbox.alert(msg);
-            //TODO: redirect back to home after successful submission of answers.
         }, "json");
     }
     else

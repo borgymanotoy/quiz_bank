@@ -1,6 +1,9 @@
 package com.borgymanotoy.samples.model;
 
+import com.google.gson.Gson;
 import org.bson.Document;
+
+import java.util.Date;
 
 public class User {
 
@@ -19,7 +22,10 @@ public class User {
     private String lastName;
     private String email;
     private String userType;
+
+
     private boolean isActive;
+    private Date lastModifiedDate;
 
 
     public User(){}
@@ -82,6 +88,33 @@ public class User {
 
     public void setUserType(String userType) {
         this.userType = userType;
+    }
+
+    public boolean isActive() {
+        return isActive;
+    }
+
+    public void setActive(boolean active) {
+        isActive = active;
+    }
+
+    public Date getLastModifiedDate() {
+        return lastModifiedDate;
+    }
+
+    public void setLastModifiedDate(Date lastModifiedDate) {
+        this.lastModifiedDate = lastModifiedDate;
+    }
+
+    public boolean validateUser(){
+        if(null!=_id && null!=password && null!=firstName && null!=lastName && null!=email && null!=userType) return true;
+        return false;
+    }
+
+    @Override
+    public String toString() {
+        Gson gson = new Gson();
+        return gson.toJson(this);
     }
 
     public Document toDocument(){

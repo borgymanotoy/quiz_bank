@@ -4,40 +4,12 @@
 <html>
     <head>
         <@t.headerMetaTags />
-        <title>Quiz Bank: Register a Class (Course)</title>
+        <title>Capstone: Register a Class (Course)</title>
 
         <!-- Bootstrap core CSS -->
         <link href="css/bootstrap.min.css" rel="stylesheet">
-
-        <style type="text/css">
-            body {
-                padding-top: 54px;
-            }
-            @media (min-width: 992px) {
-                body {
-                    padding-top: 56px;
-                }
-            }
-
-            h4 { padding: 20px 0; }
-
-            .top-space { margin-top: 30px; }
-
-            .column-separator { border-right: 1px solid #eee; }
-            input[type='text'] { width: 91.5%; }
-            textarea { width: 91.5%; }
-
-            span.status {
-                font-family: "Courier New", Georgia, Serif;
-                font-style: italic;
-                font-size: 0.65em;
-                padding: 5px;
-                border: 1px solid #ddd;
-                background-color: #eee;
-            }
-
-            span.details, p.details { margin-left: 10px; }
-        </style>
+        <link href="css/font-awesome.min.css" rel="stylesheet">
+        <link href="css/course-template.css" rel="stylesheet">
     </head>
     <body>
         <@t.navigationDiv />
@@ -46,7 +18,7 @@
             <div class="row sm-flex-center top-space">
                 <div class="col-sm-4 column-separator">
                     <div class="panel panel-info">
-                        <h4>Course Details</h4>
+                        <h4><i class="fa fa-pencil-square-o" aria-hidden="true"></i>&nbsp;Course Details</h4>
                         <div class="panel-body" >
                             <div class="form-group has-error has-feedback">
                                 <label class="control-label"><b>Class Code:</b><span class="details">${classCode!""}</span></label>
@@ -61,16 +33,16 @@
                             </div>
 
                             <div class="form-group">
-                                <!-- Button -->
-                                <div class="col-md-offset-3 col-md-9">
-                                    <input type="submit" id="btn-signup" class="btn btn-info" data-toggle="modal" data-target="#myModal" value="Course Details" />
+                                <div>
+                                    <button class="btn btn-info" data-toggle="modal" data-target="#myModal"><i class="fa fa-info-circle" aria-hidden="true"></i>&nbsp;Course Details</button>
+                                    <button class="btn btn-info" onclick="window.location='/newVideo'"><i class="fa fa-youtube" aria-hidden="true"></i>&nbsp;Add Video</button>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
                 <div class="col-sm-8 pull-right">
-                    <h4>Student Registration to Class for Approval</h4>
+                    <h4><i class="fa fa-check-square-o" aria-hidden="true"></i>&nbsp;Student Registration to Class for Approval</h4>
                     <table id="tblEnrollmentForApproval" class="table table-hover">
                         <thead>
                             <tr>
@@ -102,7 +74,7 @@
 
             <div class="row top-space">
                 <div class="col-sm-12">
-                    <h4>Class List</h4>
+                    <h4><i class="fa fa-th-list" aria-hidden="true"></i>&nbsp;Class List</h4>
                     <table id="tblClassList" class="table table-hover">
                         <thead>
                         <tr>
@@ -119,28 +91,34 @@
                             <tr>
                                 <td>${student["firstName"]}</td>
                                 <td>${student["lastName"]}</td>
-                                <td>${student["email"]}</td>
+                                <td>${student["email"]!"n/a"}</td>
                                 <td>${student["totalScore"]?string["0.##"]}</td>
                                 <td>${student["totalAverage"]?string["0.##"]}</td>
                             </tr>
                             </#list>
                         <#else>
-                        <td colspan="4">No Data Available</td>
+                            <td colspan="4">No Data Available</td>
                         </#if>
                         </tbody>
                     </table>
                 </div>
+
+                <div class="col-sm-12">
+                    <div class="col-md-offset-6 col-md-6">
+                        <button id="btnClassList" class="btn btn-info" onclick="window.location='/classList?c=${classCode!""}'"><i class="fa fa-list" aria-hidden="true"></i>&nbsp;Class List</button>
+                        <button id="btnClassList" class="btn btn-primary" onclick="window.location='/studentSearchPage?c=${classCode!""}'"><i class="fa fa-search" aria-hidden="true"></i>&nbsp;Search & Add Student to Class</button>
+                    </div>
+                </div>
+
             </div>
         </div>
 
         <!-- Modal for Add Question -->
         <div class="modal fade" id="myModal" role="dialog">
             <div class="modal-dialog">
-
-                <!-- Modal content-->
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h4 class="modal-title">Course Details</h4>
+                        <h4 class="modal-title"><i class="fa fa-pencil-square-o" aria-hidden="true"></i>&nbsp;Course Details</h4>
                         <button type="button" class="close" data-dismiss="modal">&times;</button>
                     </div>
                     <div class="modal-body">
@@ -177,7 +155,6 @@
 
         <@t.bootstrapCoreJS />
         <script src="js/course.js"></script>
-
     </body>
 </html>
 

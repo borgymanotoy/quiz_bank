@@ -30,7 +30,13 @@
         <div class="container">
 
             <#if username??>
-                <a class="navbar-brand" href="/${hdrLink!"login"}">${hdrLabel!"Already a user?"}</a>
+                <a class="navbar-brand" href="/${hdrLink!"login"}">
+                    <#if hdrLabel??>
+                        <i class="fa fa-user-circle" aria-hidden="true"></i>
+                        &nbsp;
+                    </#if>
+                    ${hdrLabel!"Already a user?"}
+                </a>
             <#else>
                 <a class="navbar-brand" href="/login">Already a user?</a>
             </#if>
@@ -49,7 +55,7 @@
                                 <a class="nav-link" href="/approvals">Registrations</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" href="/postQuiz">Topics</a>
+                                <a class="nav-link" href="/postTopic">Topics</a>
                             </li>
                         <#elseif 'S'==userType>
                             <li class="nav-item">
@@ -57,6 +63,9 @@
                             </li>
                         </#if>
                         <#if sessionId??>
+                            <li class="nav-item">
+                                <a class="nav-link" href="/profile">Profile</a>
+                            </li>
                             <li class="nav-item">
                                 <a class="nav-link" href="/logout">Logout</a>
                             </li>

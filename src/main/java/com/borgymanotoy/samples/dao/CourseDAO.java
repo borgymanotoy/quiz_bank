@@ -1,13 +1,19 @@
 package com.borgymanotoy.samples.dao;
 
+import com.mongodb.BasicDBList;
+import com.mongodb.BasicDBObject;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.Sorts;
 import com.mongodb.client.model.UpdateOptions;
 import org.bson.Document;
+import org.bson.types.ObjectId;
+
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+
 import static com.mongodb.client.model.Filters.eq;
 import static com.mongodb.client.model.Filters.or;
 import static com.mongodb.client.model.Filters.regex;
@@ -104,6 +110,7 @@ public class CourseDAO {
         }
         return false;
     }
+
 
     public List<Document> getAllClassesByTeacher(String username){
         if(null!=username){

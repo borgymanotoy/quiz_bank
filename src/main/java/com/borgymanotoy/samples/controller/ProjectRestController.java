@@ -7,18 +7,21 @@ import com.mongodb.client.MongoDatabase;
 import com.borgymanotoy.samples.dao.*;
 import com.borgymanotoy.samples.model.Topic;
 import com.borgymanotoy.samples.model.TopicQuiz;
+import com.borgymanotoy.samples.model.User;
+import com.borgymanotoy.samples.model.Video;
+import com.borgymanotoy.samples.util.FreeMarkerTemplateEngine;
 import com.borgymanotoy.samples.util.ResourceUtilities;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.bson.Document;
+import spark.ModelAndView;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 import static com.borgymanotoy.samples.util.JsonUtil.json;
 import static spark.Spark.get;
 import static spark.Spark.post;
+import static spark.Spark.redirect;
 
 public class ProjectRestController implements Mapper {
 
@@ -28,6 +31,7 @@ public class ProjectRestController implements Mapper {
     private final TopicQuizDAO topicQuizDAO;
     private final UserDAO userDAO;
     private final SessionDAO sessionDAO;
+    private final VideoDAO videoDAO;
 
     public ProjectRestController(String mongoURIString) throws IOException {
         final MongoClient mongoClient = new MongoClient(new MongoClientURI(mongoURIString));
@@ -39,6 +43,7 @@ public class ProjectRestController implements Mapper {
         topicQuizDAO = new TopicQuizDAO(projectDatabase);
         userDAO = new UserDAO(projectDatabase);
         sessionDAO = new SessionDAO(projectDatabase);
+        videoDAO = new VideoDAO(projectDatabase);
 
         setupEndPoints();
     }
@@ -120,33 +125,40 @@ public class ProjectRestController implements Mapper {
             return statusMsg;
         }, json());
 
-        post("/approveEnrollment", (request, response) -> {
-            String statusMsg = "";
-            String sessionId = ResourceUtilities.getSessionCookie(request);
-            String username = sessionDAO.findUserNameBySessionId(sessionId);
+        get("/studentSearch", (request, response) -> {
+            String searchKey = StringEscapeUtils.escapeHtml4(request.queryParams("searchKey"));
+            return this.userDAO.findBySearchKey(searchKey);
+        }, json());
 
-            if(null!=username){
+        post("/studentClassRegistration", (request, response) -> {
                 String student = StringEscapeUtils.escapeHtml4(request.queryParams("su"));
                 String classCode = StringEscapeUtils.escapeHtml4(request.queryParams("cc"));
-
-                boolean success = false;
-                if(null!=student && null!=classCode){
-                    Document course = courseDAO.findById(classCode);
-                    System.out.println("[student]: " + student);
-                    System.out.println("[classCode]: " + classCode);
-
-                    success = userDAO.addUserClasses(student, course.getString("_id"), course.getString("className")) && courseEnrollmentDAO.removeCourseEnrollment(classCode, student);
+                if(null!=student && null!=classCode) {
+                    try{
+                        userDAO.addUserClasses(student, classCode);
+                        return "Successfully registered student to class.";
+                    }
+                    catch (Exception e){
+                        return e.getMessage();
+                    }
                 }
+                return "Unable to process student registration.";
+        }, json());
 
-                if(success)
-                    statusMsg = "Student Class Registration Approved.";
-                else
-                    statusMsg = "Unable to process student registration.";
+        post("/approveEnrollment", (request, response) -> {
+            String student = StringEscapeUtils.escapeHtml4(request.queryParams("su"));
+            String classCode = StringEscapeUtils.escapeHtml4(request.queryParams("cc"));
+            if(null!=student && null!=classCode) {
+                try{
+                    userDAO.addUserClasses(student, classCode);
+                    courseEnrollmentDAO.removeCourseEnrollment(classCode, student);
+                    return "Student Class Registration Approved.";
+                }
+                catch (Exception e){
+                    return e.getMessage();
+                }
             }
-            else
-                response.redirect("/login");
-
-            return statusMsg;
+            return "Unable to process student registration.";
         }, json());
 
         post("/denyEnrollment", (request, response) -> {
@@ -166,6 +178,21 @@ public class ProjectRestController implements Mapper {
 
         }, json());
 
+        post("/dropStudent", (request, response) -> {
+            String student = StringEscapeUtils.escapeHtml4(request.queryParams("su"));
+            String classCode = StringEscapeUtils.escapeHtml4(request.queryParams("cc"));
+
+            boolean success = false;
+            if(null!=student && null!=classCode){
+                success = this.userDAO.removeUserCourse(student, classCode);
+            }
+
+            if(success)
+                return "Successfully dropped student to class.";
+            else
+                return "Unable to drop student from the class.";
+        }, json());
+
         post("/saveCourseDetails", (request, response) -> {
             String classCode = StringEscapeUtils.escapeHtml4(request.queryParams("classCode"));
             String className = StringEscapeUtils.escapeHtml4(request.queryParams("className"));
@@ -175,21 +202,65 @@ public class ProjectRestController implements Mapper {
             String sessionId = ResourceUtilities.getSessionCookie(request);
             String username = sessionDAO.findUserNameBySessionId(sessionId);
 
-            String msg = "Unknown User!";
             if(null!=username) {
                 user = userDAO.getUserInfo(username);
-                boolean successCourseSave = courseDAO.saveClass(username, classCode, className, classDescription, user.getString("firstName") + " " + user.getString("lastName"));
-                if(successCourseSave) {
-                    msg = "Successfully saved class(course).";
-                    userDAO.addUserClasses(username, classCode, className);
+                if(null!=user){
+                    if(courseDAO.saveClass(username, classCode, className, classDescription, user.getString("firstName") + " " + user.getString("lastName"))) {
+                        try{
+                            userDAO.addUserClasses(username, classCode);
+                            return "Successfully saved class(course).";
+                        }
+                        catch (Exception e){
+                            return e.getMessage();
+                        }
+                    }
                 }
-                else
-                    msg = "Problem saving class(course).";
             }
 
-            return msg;
+            return "Problem saving class(course).";
         }, json());
 
+
+        post("/addVideo", (request, response) -> {
+            String sessionId = ResourceUtilities.getSessionCookie(request);
+            String username = sessionDAO.findUserNameBySessionId(sessionId);
+
+            boolean success = false;
+
+            if(null!=username){
+                Gson gson = new Gson();
+                Video video = gson.fromJson(request.body(), Video.class);
+
+                if(null!=video){
+                    video.setAuthor(username);
+                    video.setCreationDate(new Date());
+                    Document docVideo = Document.parse(video.toString());
+                    success = this.videoDAO.addVideo(docVideo);
+                }
+            }
+
+            if(success)
+                return "Video successfully added!";
+            else
+                return "Unable to add video.";
+        }, json());
+
+
+        get("/getUserVideos", (request, response) -> {
+            String sessionId = ResourceUtilities.getSessionCookie(request);
+            String username = sessionDAO.findUserNameBySessionId(sessionId);
+            return this.videoDAO.getVideos(username);
+        }, json());
+
+        get("/getClassVideos", (request, response) -> {
+            String classCode = StringEscapeUtils.escapeHtml4(request.queryParams("c"));
+            return this.videoDAO.getClassVideos(classCode);
+        }, json());
+
+        get("/getVideoDetails", (request, response) -> {
+            String videoId = StringEscapeUtils.escapeHtml4(request.queryParams("v"));
+            return this.videoDAO.findById(videoId);
+        }, json());
 
         post("/saveTopic", (request, response) -> {
             Gson gson = new Gson();

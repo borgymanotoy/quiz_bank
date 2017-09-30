@@ -5,10 +5,11 @@
 
     <head>
         <@t.headerMetaTags />
-        <title>Quiz Bank: Homepage</title>
+        <title>Capstone: Homepage</title>
 
         <!-- Bootstrap core CSS -->
         <link href="css/bootstrap.min.css" rel="stylesheet">
+        <link rel="stylesheet" href="css/font-awesome.min.css">
         <link rel="stylesheet" href="css/home.css">
         <@t.headerFavicons />
     </head>
@@ -21,7 +22,7 @@
             <#if userType?? && 'T'==userType>
                 <div class="row sm-flex-center">
                     <div class="col-sm-4">
-                        <h4>Classes</h4>
+                        <h4><i class="fa fa-list-ul" aria-hidden="true"></i>&nbsp;Classes</h4>
                         <div class="list">
                             <#if userClasses??>
                                 <ul class="list-group">
@@ -33,7 +34,7 @@
                         </div>
                     </div>
                     <div class="col-sm-8 pull-right">
-                        <h4>Student Registration to Class for Approval</h4>
+                        <h4><i class="fa fa-users" aria-hidden="true"></i>&nbsp;Student Registration to Class for Approval</h4>
                         <table id="tblEnrollmentForApproval" class="table table-hover">
                             <thead>
                             <tr>
@@ -79,7 +80,7 @@
                         <#if topics??>
                             <ul class="list-group">
                                 <#list topics as t>
-                                    <li class="list-group-item" onclick="window.location='/viewTopic?tid=${t["_id"]}'">(${t["classCode"]}) : ${t["topic"]} <#if t["taken"]?? && t["taken"]><strong> - Taken</strong></#if></li>
+                                    <li class="list-group-item" onclick="window.location='/viewTopic?tid=${t["_id"]}'">(${t["classCode"]}) : ${t["topic"]} <#if t["taken"]?? && t["taken"]><strong> - Taken (${t["percentage"]}%)</strong></#if></li>
                                 </#list>
                             </ul>
                         </#if>

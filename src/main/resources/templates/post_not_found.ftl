@@ -2,7 +2,7 @@
 <html
     <head>
         <title>
-            Quiz Bank: Post (Quiz) not found
+            Post (Quiz) not found
         </title>
     </head>
     <body>
