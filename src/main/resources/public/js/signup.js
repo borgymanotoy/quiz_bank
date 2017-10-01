@@ -31,10 +31,19 @@ var registerUser = function(){
         if(""!=email && !validateEmail(email))
             bootbox.alert("Email Address is not valid!");
         else if(password == verifyPassword){
-            bootbox.alert({
-                message: "You are registering as a " + type,
-                callback: function () {
-                    $('#signupform').submit();
+            bootbox.confirm({
+                message: "Registering user as a " + type + ". Do you want to continue?",
+                buttons: {
+                    cancel: {
+                        label: '<i class="fa fa-times-circle-o" aria-hidden="true"></i> No'
+                    },
+                    confirm: {
+                        label: '<i class="fa fa-check-circle-o" aria-hidden="true"></i> Yes'
+                    }
+                },
+                callback: function (choice) {
+                    if(choice)
+                        $('#signupform').submit();
                 }
             });
         }
