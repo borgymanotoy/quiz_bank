@@ -17,6 +17,9 @@
 
 package com.borgymanotoy.samples.dao;
 
+import com.borgymanotoy.samples.model.Topic;
+import com.google.gson.Gson;
+import com.mongodb.BasicDBList;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Filters;
@@ -82,6 +85,34 @@ public class TopicDAO {
                 return true;
             } catch (Exception e) {
                 System.out.println("Error inserting post");
+            }
+        }
+
+        return false;
+    }
+
+    public boolean updateTopic(Topic topic) {
+        if(null!=topic){
+            Gson gson = new Gson();
+            try {
+                Document dcx = new Document();
+                dcx.append("videoLink", topic.getVideoLink());
+                dcx.append("summary", topic.getSummary());
+
+                BasicDBList list = new BasicDBList();
+                for(Topic.Item i : topic.getItems()){
+                    Document di = Document.parse(gson.toJson(i));
+                    list.add(di);
+                }
+
+                dcx.append("items", list);
+
+                topicCollection.updateOne(eq(topic.get_id()), new Document("$set", dcx));
+
+                System.out.println("Successfully updated the topic!");
+                return true;
+            } catch (Exception e) {
+                System.out.println("Error updating topic!");
             }
         }
 

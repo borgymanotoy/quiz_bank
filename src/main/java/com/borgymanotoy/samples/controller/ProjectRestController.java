@@ -279,6 +279,23 @@ public class ProjectRestController implements Mapper {
                 return "Unable to save topic.";
         }, json());
 
+        post("/updateTopic", (request, response) -> {
+            Gson gson = new Gson();
+            Topic topic = gson.fromJson(request.body(), Topic.class);
+            boolean success = false;
+
+            if(null!=topic){
+                topic.setCreationDate(new Date());
+                Document docTopic = Document.parse(topic.toString());
+                success = topicDAO.updateTopic(topic);
+            }
+
+            if(success)
+                return "Topic successfully posted!";
+            else
+                return "Unable to save topic.";
+        }, json());
+
         post("/submitTopicAnswers", (request, response) -> {
             Gson gson = new Gson();
             TopicQuiz topicQuiz = gson.fromJson(request.body(), TopicQuiz.class);

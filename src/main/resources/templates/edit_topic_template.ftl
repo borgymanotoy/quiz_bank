@@ -2,106 +2,121 @@
 
 <!doctype HTML>
 <html>
-    <head>
-        <@t.headerMetaTags />
+<head>
+<@t.headerMetaTags />
 
-        <title>Capstone: Create a new Quiz</title>
+    <title>Capstone: Create a new Quiz</title>
 
-        <link href="css/bootstrap.min.css" rel="stylesheet">
-        <link rel="stylesheet" href="css/font-awesome.min.css">
-        <link rel="stylesheet" href="css/topics.css">
-    </head>
-    <body>
-        <@t.navigationDiv />
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/font-awesome.min.css">
+    <link rel="stylesheet" href="css/topics.css">
+</head>
+<body>
+<@t.navigationDiv />
 
-        <div class="container">
-            <div class="row sm-flex-center top-space">
-                <div class="col-sm-7 column-separator">
-                    <div class="panel panel-info">
-                        <h4><i class="fa fa-file-text-o" aria-hidden="true"></i>&nbsp;&nbsp;Topic</h4>
-                        <div class="panel-body" style="border-right: 1px solid #eee;">
-                        <#--<form id="postquizform" class="form-horizontal" role="form" action="/postQuiz" method="POST">-->
-                            <div class="form-group has-error has-feedback">
-                                <label for="selClass" class="col-md-3 control-label">Class</label>
-                                <div class="col-md-11">
-                                    <select name="sel_class" id="selClass" class="form-control">
-                                    <#if userClasses??>
-                                        <ul class="list-group">
-                                            <option class="list-group-item" value="">Select a Class</option>
-                                            <#list userClasses as cls>
-                                                <option class="list-group-item" value="${cls["_id"]}">${cls["className"]}</option>
-                                            </#list>
-                                        </ul>
-                                    <#else>
-                                        <option value="N_A">No Class Available</option>
-                                    </#if>
-                                    </select>
-                                </div>
-                            </div>
+<div class="container">
+    <div class="row sm-flex-center top-space">
+        <div class="col-sm-7 column-separator">
+            <div class="panel panel-info">
+                <h4><i class="fa fa-file-text-o" aria-hidden="true"></i>&nbsp;&nbsp;Topic</h4>
+                <div class="panel-body" style="border-right: 1px solid #eee;">
+                    <input type="hidden" id="hndTopicId" name="topicId" value="${topicId}" />
+                    <input type="hidden" id="hndCourseCode" name="courseCode" value="${courseCode}" />
 
-                            <div class="form-group">
-                                <label for="txtTitle" class="col-md-3 control-label">Video Topics</label>
-                                <div class="col-md-11">
-                                    <select id="selVideoTopics" class="form-control">
-                                        <option value="">Select a video</option>
-                                        <#if videos??>
-                                            <#list videos as v>
-                                                <option class="list-group-item" value="${v["_id"]}">${v["topic"]}</option>
-                                            </#list>
-                                        </#if>
-                                    </select>
-                                </div>
-                            </div>
-
-                            <div class="form-group">
-                                <label for="txtTitle" class="col-md-3 control-label">Topic</label>
-                                <div class="col-md-11">
-                                    <input type="text" class="form-control" id="txtTopic" name="subject" size="120" value="${subject!""}"><br />
-                                </div>
-                            </div>
-
-                            <div id="divVplayer" class="form-group">
-                                <iframe></iframe>
-                            </div>
-
-                            <div class="form-group right-inner-addon">
-                                <div class="col-md-11">
-                                    <i class="fa fa-eye" aria-hidden="true"></i>
-                                    <input type="search" class="form-control" id="txtVideoUrl" name="videolink" placeholder="https://www.youtube.com/watch?v=<YoutubeVideoId>" title="Enter valid youtube video link and press ENTER key to refresh the video." value="https://www.youtube.com/watch?v=__y8vWaVGqk" />
-                                </div>
-                            </div>
-
-                            <div class="form-group">
-                                <label for="txtTopicSummary" class="col-md-3 control-label">Summary</label>
-                                <div class="col-md-11">
-                                    <textarea class="form-control" id="txtTopicSummary" name="summary" placeholder="Topic Summary" title="Enter Content Summary" cols="30" rows="10">${contents!""}</textarea>
-                                </div>
-                            </div>
-                        <#--</form>-->
+                    <div class="form-group has-error has-feedback">
+                        <label for="txtClass" class="col-md-3 control-label">Course</label>
+                        <div class="col-md-11">
+                            <input type="text" id="txtClass" class="form-control" value='${course!""}' readonly />
                         </div>
                     </div>
-                </div>
-                <div class="col-sm-5 pull-right">
-                    <div class="panel panel-info">
-                        <h4><i class="fa fa-question-circle" aria-hidden="true"></i>&nbsp;Questions</h4>
-                        <div class="panel-body underlined" style="border-right: 1px solid #eee;">
-                            <ol id="listQuestions">
-                            </ol>
+
+                    <div class="form-group">
+                        <label for="txtTitle" class="col-md-3 control-label">Video Topics</label>
+                        <div class="col-md-11">
+                            <select id="selVideoTopics" class="form-control">
+                                <option value="">Select a video</option>
+                                <#if videos??>
+                                    <#list videos as v>
+                                        <option class="list-group-item" value="${v["_id"]}">${v["topic"]}</option>
+                                    </#list>
+                                </#if>
+                            </select>
                         </div>
-                        <div>
-                            <button type="button" class="btn btn-info btn-md" onclick="createNewItem()"><i class="fa fa-plus-square-o" aria-hidden="true"></i>&nbsp;Add Question</button>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="txtTitle" class="col-md-3 control-label">Topic</label>
+                        <div class="col-md-11">
+                            <input type="text" class="form-control" id="txtTopic" name="subject" size="120" value='${topic!""}' readonly><br />
+                        </div>
+                    </div>
+
+                    <div id="divVplayer" class="form-group">
+                    <#if showVideoPlayer?? && showVideoPlayer==true>
+                        <iframe></iframe>
+                    </#if>
+                    </div>
+
+                    <div class="form-group right-inner-addon">
+                        <div class="col-md-11">
+                            <i class="fa fa-eye" aria-hidden="true"></i>
+                            <input type="search" class="form-control" id="txtVideoUrl" name="videolink" placeholder="https://www.youtube.com/watch?v=<YoutubeVideoId>" title="Enter valid youtube video link and press ENTER key to refresh the video." value='${videoLink!""}' />
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="txtTopicSummary" class="col-md-3 control-label">Summary</label>
+                        <div class="col-md-11">
+                            <textarea class="form-control" id="txtTopicSummary" name="summary" placeholder="Topic Summary" title="Enter Content Summary" cols="30" rows="10">${summary!""}</textarea>
                         </div>
                     </div>
                 </div>
             </div>
-            <div class="row top-space">
-                <div class="form-group">
-                    <!-- Button -->
-                    <div class="col-md-offset-3 col-md-11">
-                        <button type="button" class="btn btn-primary btn-lg" onclick="postTopic()"><i class="fa fa-file-text-o" aria-hidden="true"></i>&nbsp;&nbsp;Post Topic</button>
-                    </div>
+        </div>
+        <div class="col-sm-5 pull-right">
+        <#if listTopScores??>
+            <div class="panel panel-info">
+                <h4>Top Scores</h4>
+                <div class="panel-body underlined" style="border-right: 1px solid #eee;">
+                    <table id="tblClassList" class="table table-hover">
+                        <thead>
+                        <tr>
+                            <th>Student</th>
+                            <th>Score</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                            <#if listTopScores??>
+                                <#list listTopScores as ts>
+                                <tr>
+                                    <td>${ts["studentName"]}</td>
+                                    <td>${ts["topicScore"]}</td>
+                                </tr>
+                                </#list>
+                            </#if>
+                        </tbody>
+                    </table>
                 </div>
             </div>
+        <#elseif items??>
+            <div class="panel panel-info">
+                <h4><i class="fa fa-question-circle" aria-hidden="true"></i>&nbsp;Questions</h4>
+                <div class="panel-body underlined" style="border-right: 1px solid #eee;">
+                    <ol id="listQuestions">
+                        <#list items as i>
+                            <li onclick="displayItemDetails('${i["id"]}')">${i["question"]}</li>
+                        </#list>
+                    </ol>
+                </div>
+                <div>
+                    <button type="button" class="btn btn-info btn-md" onclick="createNewItem()"><i class="fa fa-plus-square-o" aria-hidden="true"></i>&nbsp;Add Question</button>
+                </div>
+            </div>
+        <#else>
+            <div class="panel panel-info">
+                <h4>Topic Not Found!</h4>
+            </div>
+        </#if>
         </div>
 
         <!-- Modal for Add Question -->
@@ -136,6 +151,7 @@
                         </div>
 
                         <div id="divBooleanChoices" class="form-group">
+                            <label class="control-label">Answer:</label>
                             <div class="radio">
                                 <input type="radio" id="rdbTrue" name="bChoice" value="True" />
                                 <label for="rdbTrue" class="radio-inline">True</label>
@@ -214,9 +230,26 @@
         </div>
         <!-- End: Modal For Add Question -->
 
-        <@t.bootstrapCoreJS />
-        <script src="js/topics.js"></script>
+        <#if allowTopicSubmit?? && allowTopicSubmit>
+            <div class="row top-space">
+                <div class="form-group">
+                    <!-- Button -->
+                    <div class="col-md-offset-3 col-md-11">
+                        <button type="button" class="btn btn-primary btn-lg" onclick="updateTopicDetails()">Update Topic</button>
+                    </div>
+                </div>
+            </div>
+        </#if>
 
-    </body>
+    </div>
+
+</div>
+
+<@t.bootstrapCoreJS />
+<script src="js/editTopic.js"></script>
+<script>
+    var topic = new Object();
+    var items = JSON.parse('${jsonItems}');
+</script>
+</body>
 </html>
-

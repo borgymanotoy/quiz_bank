@@ -71,6 +71,34 @@
             </div>
 
             <hr />
+            <div class="row top-space">
+                <div class="col-sm-12">
+                    <h4><i class="fa fa-file-text-o" aria-hidden="true"></i>&nbsp;Topics</h4>
+                    <table id="tblClassTopics" class="table table-hover">
+                        <thead>
+                        <tr>
+                            <th>Topic</th>
+                            <th>&nbsp;</th>
+                            <th>&nbsp;</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <#if classTopics??>
+                            <#list classTopics as t>
+                            <tr>
+                                <td>${t["topic"]}</td>
+                                <td><a href="javascript:void(0);" class="btn btn-info" onclick="window.open('${t["videoLink"]}')"><i class="fa fa-play" aria-hidden="true"></i></a></td>
+                                <td><a href='/editTopic?tid=${t["_id"]}' class="btn btn-secondary"><i class="fa fa-pencil-square-o" aria-hidden="true"></i></a></td>
+                            </tr>
+                            </#list>
+                        <#else>
+                            <td colspan="3">No Data Available</td>
+                        </#if>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <hr />
 
             <div class="row top-space">
                 <div class="col-sm-12">

@@ -333,7 +333,7 @@ var refreshAnswerFieldsByType = function(answerType){
             $('#divSingleAnswer').hide();
             $('#divMultipleAnswer').hide();
     }
-}
+};
 
 var postTopic = function(){
     var _topic = $('#txtTopic').val();
@@ -351,8 +351,12 @@ var postTopic = function(){
 
         if(topic.items && 0 < topic.items.length){
             $.post( "/saveTopic", JSON.stringify(topic), function(msg) {
-                bootbox.alert(msg);
-                clearTopicFields();
+                bootbox.alert({
+                    message: msg,
+                    callback: function () {
+                        clearTopicFields();
+                    }
+                });
             }, "json");
         }
         else

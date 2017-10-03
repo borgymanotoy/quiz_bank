@@ -26,15 +26,18 @@ import sun.misc.BASE64Encoder;
 import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Random;
 
 import static com.mongodb.client.model.Filters.*;
 import static com.mongodb.client.model.Filters.regex;
 
 public class UserDAO {
     private final MongoCollection<Document> usersCollection;
+    private Random random = new SecureRandom();
 
     public UserDAO(final MongoDatabase projectDatabase) {
         usersCollection = projectDatabase.getCollection("users");
@@ -49,6 +52,8 @@ public class UserDAO {
 
     public boolean addUser(User user){
         if(null!=user){
+            String passwordHash = makePasswordHash(user.getPassword(), Integer.toString(random.nextInt()));
+            user.setPassword(passwordHash);
             user.setLastModifiedDate(new Date());
             Document docUser = Document.parse(user.toString());
             try {

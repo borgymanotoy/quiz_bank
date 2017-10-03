@@ -83,7 +83,7 @@ public class Topic {
     }
 
 
-    private class Item {
+    public class Item {
 
         private String id;
         private String question;

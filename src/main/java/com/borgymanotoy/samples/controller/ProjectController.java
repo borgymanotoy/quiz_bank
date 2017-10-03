@@ -555,6 +555,7 @@ public class ProjectController implements Mapper{
                     int topicsCount = topicDAO.getCourseTopicsCount(classCode);
                     //System.out.println("\n[topicsCount]: " + topicsCount);
 
+                    List<Document> listClassTopics = this.topicDAO.getClassTopics(classCode);
                     List<Document> listTopicQuiz = topicQuizDAO.findByCourseCodeDateDescending(classCode);
                     List<Document> classList = userDAO.getClassStudents(classCode);
                     if(null!=classList && 0 < classList.size()){
@@ -585,6 +586,7 @@ public class ProjectController implements Mapper{
                             //System.out.println("[totalScore]: " + totalScore);
                             //System.out.println("[totalAverage]: " + totalAverage);
                         }
+                        attributes.put("classTopics", listClassTopics);
                         attributes.put("classList", classList);
                     }
 
@@ -934,7 +936,81 @@ public class ProjectController implements Mapper{
         }, new FreeMarkerTemplateEngine());
 
 
+        get("/editTopic", (request, response) -> {
+            Map<String, Object> attributes = new HashMap<>();
 
+            Gson gson = new Gson();
+            Document user = null;
+            String sessionId = ResourceUtilities.getSessionCookie(request);
+            String username = sessionDAO.findUserNameBySessionId(sessionId);
+            attributes.put("sessionId", sessionId);
+
+            if (username == null)
+                response.redirect("/login");
+            else {
+                attributes.put("username", username);
+
+                user = userDAO.getUserInfo(username);
+                if(null!=user){
+                    attributes.put("userType", user.getString("userType"));
+                    attributes.put("hdrLink", "");
+                    attributes.put("hdrLabel", "Welcome " + (user.getString("firstName") + " " + user.getString("lastName")));
+                }
+
+                String topicId = StringEscapeUtils.escapeHtml4(request.queryParams("tid"));
+
+                boolean allowTopicSubmit = false;
+                if(null!=topicId){
+                    Document docTopic = topicDAO.findById(topicId);
+                    if(null!=docTopic){
+                        attributes.put("topicId", docTopic.getString("_id"));
+
+                        String classCode = docTopic.getString("classCode");
+                        if(null!=classCode){
+                            Document docCourse = courseDAO.findById(classCode);
+                            if(null!=docCourse){
+                                String course = docCourse.getString("className");
+                                attributes.put("courseCode", classCode);
+                                attributes.put("course", course);
+                            }
+
+                            List<Document> videos = this.videoDAO.getClassVideos(classCode);
+                            attributes.put("videos", videos);
+                        }
+
+                        attributes.put("topic", docTopic.getString("topic"));
+                        attributes.put("summary", docTopic.getString("summary"));
+                        attributes.put("videoLink", docTopic.getString("videoLink"));
+                        attributes.put("showVideoPlayer", true);
+
+                        ArrayList<Document> items =  (ArrayList) docTopic.get("items");
+
+                        attributes.put("items", items);
+                        attributes.put("jsonItems", gson.toJson(items));
+                        System.out.println("[json-items]: " + gson.toJson(items));
+
+                        if(null!=topicQuizDAO.findByTopicIdAndCourseAndStudent(topicId, username, classCode)){
+                            List<Document> listTopScores = topicQuizDAO.findByTopicIdOrderByScoreAndDateDescending(topicId);
+                            attributes.put("listTopScores", listTopScores);
+                        }
+                        else
+                            allowTopicSubmit = true;
+                    }
+                    else {
+                        attributes.put("topicId", NOT_AVAILABLE);
+                        attributes.put("courseCode", BLANK_VALUE);
+                        attributes.put("course", BLANK_VALUE);
+
+                        attributes.put("topic", NOT_AVAILABLE);
+                        attributes.put("summary", NOT_AVAILABLE);
+                        attributes.put("videoLink", BLANK_VALUE);
+                        attributes.put("showVideoPlayer", false);
+                    }
+                }
+                attributes.put("allowTopicSubmit", allowTopicSubmit);
+            }
+            return new ModelAndView(attributes, "edit_topic_template.ftl");
+        }, new FreeMarkerTemplateEngine());
 
 
 

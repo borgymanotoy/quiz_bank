@@ -25,3 +25,10 @@ span.status {
 }
 
 span.details, p.details { margin-left: 10px; }
+
+#tblClassTopics > thead>tr>td:nth-child(2),
+#tblClassTopics > thead>tr>td:nth-child(3),
+#tblClassTopics > tbody>tr>td:nth-child(2),
+#tblClassTopics > tbody>tr>td:nth-child(3) {
+    width: 25px;
+}
