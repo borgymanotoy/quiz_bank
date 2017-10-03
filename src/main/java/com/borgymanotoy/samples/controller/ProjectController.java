@@ -19,10 +19,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static com.borgymanotoy.samples.util.JsonUtil.json;
 import static spark.Spark.get;
 import static spark.Spark.post;
-import static spark.Spark.put;
 
 
 public class ProjectController implements Mapper{
@@ -868,16 +866,9 @@ public class ProjectController implements Mapper{
 
                 String topicId = StringEscapeUtils.escapeHtml4(request.queryParams("tid"));
 
-//                System.out.println("\n\n");
-//                System.out.println("VIEW-TOPIC");
-//                System.out.println("---------------------------------------------");
-//                System.out.println("[TOPIC-ID]: " + topicId);
-//                System.out.println("---------------------------------------------");
-//                System.out.println("\n\n");
                 boolean allowTopicSubmit = false;
                 if(null!=topicId){
                     Document docTopic = topicDAO.findById(topicId);
-//                    System.out.println("TOPIC: " + docTopic.toJson());
                     if(null!=docTopic){
                         attributes.put("topicId", docTopic.getString("_id"));
 
@@ -891,18 +882,12 @@ public class ProjectController implements Mapper{
                             }
                         }
 
-//                        System.out.println("[topic]: " + docTopic.getString("topic"));
-//                        System.out.println("[videoLink]: " + docTopic.getString("videoLink"));
-//                        System.out.println("[summary]: " + docTopic.getString("summary"));
-
-
                         attributes.put("topic", docTopic.getString("topic"));
                         attributes.put("summary", docTopic.getString("summary"));
                         attributes.put("videoLink", docTopic.getString("videoLink"));
                         attributes.put("showVideoPlayer", true);
 
                         ArrayList<Document> items =  (ArrayList) docTopic.get("items");
-//                        System.out.println("items.count: " + items.size());
 
                         attributes.put("items", items);
 

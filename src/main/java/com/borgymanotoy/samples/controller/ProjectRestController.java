@@ -7,13 +7,10 @@ import com.mongodb.client.MongoDatabase;
 import com.borgymanotoy.samples.dao.*;
 import com.borgymanotoy.samples.model.Topic;
 import com.borgymanotoy.samples.model.TopicQuiz;
-import com.borgymanotoy.samples.model.User;
 import com.borgymanotoy.samples.model.Video;
-import com.borgymanotoy.samples.util.FreeMarkerTemplateEngine;
 import com.borgymanotoy.samples.util.ResourceUtilities;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.bson.Document;
-import spark.ModelAndView;
 
 import java.io.IOException;
 import java.util.*;
@@ -21,7 +18,6 @@ import java.util.*;
 import static com.borgymanotoy.samples.util.JsonUtil.json;
 import static spark.Spark.get;
 import static spark.Spark.post;
-import static spark.Spark.redirect;
 
 public class ProjectRestController implements Mapper {
 

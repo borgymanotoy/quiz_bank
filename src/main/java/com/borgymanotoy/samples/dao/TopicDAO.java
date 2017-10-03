@@ -109,7 +109,6 @@ public class TopicDAO {
 
                 topicCollection.updateOne(eq(topic.get_id()), new Document("$set", dcx));
 
-                System.out.println("Successfully updated the topic!");
                 return true;
             } catch (Exception e) {
                 System.out.println("Error updating topic!");
