@@ -88,4 +88,11 @@ public class TopicQuizDAO {
                 .limit(limit)
                 .into(new ArrayList<>());
     }
+
+
+    public boolean hasStudentsTakenTopicQuiz(String topicId) {
+        long countTookQuiz = topicQuizCollection.count(eq("topicId", topicId));
+        return 0 < countTookQuiz ? true : false;
+    }
+
 }

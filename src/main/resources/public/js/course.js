@@ -30,16 +30,18 @@ var denyStudentClassEnrollment = function(student, classCode){
 
 var updateCourseDetails = function(){
     var my_url = "/saveCourseDetails?classCode=" + $('#txtClassCode').val() + "&className=" + $('#txtClassName').val() + "&classDescription=" + $('#txtClassDescription').val();
-
-/*
-    var classCode = $('#txtClassCode').val();
-    var className = $('#txtClassName').val();
-    var classDesc = $('#txtClassDescription').val();
-*/
-
     $.post(my_url, function(msg){
         bootbox.alert(msg);
     });
+};
 
-
+var checkAllowedTopicUpdate = function(topicId){
+    if(topicId){
+        $.getJSON("/allowTopicUpdate?tid=" + topicId, function(json) {
+            if('OK'==json.statusCode)
+                window.location = "editTopic?tid=" + topicId;
+            else
+                bootbox.alert(json.statusMessage);
+        });
+    }
 };

@@ -258,6 +258,24 @@ public class ProjectRestController implements Mapper {
             return this.videoDAO.findById(videoId);
         }, json());
 
+        get("/allowTopicUpdate", (request, response) -> {
+            String topicId = StringEscapeUtils.escapeHtml4(request.queryParams("tid"));
+
+            boolean hasTakenQuiz = this.topicQuizDAO.hasStudentsTakenTopicQuiz(topicId);
+
+            DisplayStatus status = new DisplayStatus();
+            if(hasTakenQuiz){
+                status.setStatusCode("ERROR");
+                status.setStatusMessage("Update not possible to topics already taken by students!");
+            }
+            else {
+                status.setStatusCode("OK");
+                status.setStatusMessage("Redirecting to edit topic page.");
+            }
+
+            return status;
+        }, json());
+
         post("/saveTopic", (request, response) -> {
             Gson gson = new Gson();
             Topic topic = gson.fromJson(request.body(), Topic.class);
@@ -384,4 +402,26 @@ public class ProjectRestController implements Mapper {
         return answers;
     }
 
+
+    private static class DisplayStatus {
+        private String statusCode;
+        private String statusMessage;
+
+
+        public String getStatusCode() {
+            return statusCode;
+        }
+
+        public void setStatusCode(String statusCode) {
+            this.statusCode = statusCode;
+        }
+
+        public String getStatusMessage() {
+            return statusMessage;
+        }
+
+        public void setStatusMessage(String statusMessage) {
+            this.statusMessage = statusMessage;
+        }
+    }
 }

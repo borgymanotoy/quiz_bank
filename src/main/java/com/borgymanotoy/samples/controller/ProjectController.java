@@ -972,7 +972,6 @@ public class ProjectController implements Mapper{
 
                         attributes.put("items", items);
                         attributes.put("jsonItems", gson.toJson(items));
-                        System.out.println("[json-items]: " + gson.toJson(items));
 
                         if(null!=topicQuizDAO.findByTopicIdAndCourseAndStudent(topicId, username, classCode)){
                             List<Document> listTopScores = topicQuizDAO.findByTopicIdOrderByScoreAndDateDescending(topicId);

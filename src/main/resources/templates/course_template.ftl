@@ -88,7 +88,7 @@
                             <tr>
                                 <td>${t["topic"]}</td>
                                 <td><a href="javascript:void(0);" class="btn btn-info" onclick="window.open('${t["videoLink"]}')"><i class="fa fa-play" aria-hidden="true"></i></a></td>
-                                <td><a href='/editTopic?tid=${t["_id"]}' class="btn btn-secondary"><i class="fa fa-pencil-square-o" aria-hidden="true"></i></a></td>
+                                <td><a href="javascript:void(0);" onclick="checkAllowedTopicUpdate('${t["_id"]}')" class="btn btn-secondary"><i class="fa fa-pencil-square-o" aria-hidden="true"></i></a></td>
                             </tr>
                             </#list>
                         <#else>
